@@ -1,0 +1,28 @@
+{
+  "name": "gaverfordig",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gaverfordig.dk – lokale firmagaver fra butikker i Vejen Kommune",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "seed": "node scripts/reset-db.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.11",
+    "next": "^16.4.2",
+    "pg": "^8.23.1",
+    "qrcode": "^1.5.4",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/pg": "^8.23.1",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.9"
+  }
+}
