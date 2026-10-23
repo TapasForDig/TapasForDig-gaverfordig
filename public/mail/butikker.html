@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mail til butikker – Gaver For Dig</title>
+<style>
+  body { margin: 0; background: #ece8df; font-family: Arial, Helvetica, sans-serif; }
+  .tool { max-width: 640px; margin: 0 auto; padding: 20px 16px 0; font-size: 14px; color: #1f2a24; }
+  .tool b { display: block; margin-bottom: 4px; }
+  .tool .subject { background: #fff; border: 1px solid #d6d0c3; border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px; }
+  .tool button { background: #415743; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin-right: 8px; }
+  .tool .ok { color: #2f5a2b; font-weight: bold; }
+  @media print { .tool { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="tool">
+  <b>Emne</b>
+  <div class="subject" id="subject">Bliv en del af Gaver For Dig – firmagaver fra lokale butikker i Vejen Kommune</div>
+  <button type="button" onclick="copyMail()">Kopiér mailen</button>
+  <button type="button" onclick="copySubject()" style="background:#fff;color:#415743;border:1px solid #415743">Kopiér emne</button>
+  <span id="msg" class="ok"></span>
+  <p style="color:#4d5a52;margin:10px 0 20px">Tryk "Kopiér mailen", og sæt den ind i en ny mail i dit mailprogram (Ctrl+V / Cmd+V). Billederne hentes fra gaverfordig.dk, så de vises også hos modtageren. Ret <b style="display:inline;margin:0">[Navn]</b> og <b style="display:inline;margin:0">[Butik]</b> før du sender.</p>
+</div>
+
+<!-- MAIL START -->
+<div id="mail">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ece8df;">
+<tr><td align="center" style="padding:0 8px 32px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#1f2a24;">
+
+  <!-- Top -->
+  <tr><td style="background:#415743;padding:22px 28px;">
+    <img src="https://www.gaverfordig.dk/logo-white.png" width="190" alt="Gaver For Dig" style="display:block;width:190px;height:auto;border:0;">
+    <div style="color:#e9d5a0;font-size:12px;letter-spacing:1px;font-weight:bold;margin-top:8px;text-transform:uppercase;">Firmagaver fra lokale butikker i Vejen Kommune</div>
+  </td></tr>
+
+  <!-- Intro -->
+  <tr><td style="padding:28px 28px 8px;font-size:15px;line-height:1.6;">
+    <p style="margin:0 0 14px;">Hej [Navn]</p>
+    <p style="margin:0 0 14px;">Hvert år køber virksomhederne i Vejen Kommune julegaver til tusindvis af medarbejdere – og alt for mange af pengene ender hos store, nationale gavefirmaer. Det vil vi gerne lave om på.</p>
+    <p style="margin:0 0 14px;"><b>Gaver For Dig</b> er en ny lokal gaveportal fra Vinfordig ApS i Brørup – os bag Vin For Dig og Tapas For Dig. Virksomhederne køber gavekort, og medarbejderne vælger selv deres gave blandt varer fra lokale butikker. Vi samler gaverne, pakker dem med navn og leverer dem samlet til virksomheden – eller hjem til medarbejderne.</p>
+    <p style="margin:0;">Vi vil rigtig gerne have <b>[Butik]</b> med.</p>
+  </td></tr>
+
+  <tr><td style="padding:18px 28px 6px;">
+    <img src="https://www.gaverfordig.dk/mail/1-proces.jpg" width="544" alt="Sådan virker det: 1. Opret gaver, 2. Medarbejderne vælger, 3. Aflever i Brørup, 4. Vi pakker og leverer" style="display:block;width:100%;max-width:544px;height:auto;border:0;border-radius:8px;">
+  </td></tr>
+
+  <!-- Fordele -->
+  <tr><td style="padding:20px 28px 4px;font-size:15px;line-height:1.6;">
+    <h2 style="font-size:20px;color:#415743;margin:0 0 10px;">Hvad får din butik ud af det?</h2>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:15px;line-height:1.5;">
+      <tr><td valign="top" style="width:26px;color:#415743;font-weight:bold;padding:4px 0;">✓</td><td style="padding:4px 0;"><b>Nye kunder:</b> virksomheder, der ellers ville købe deres gaver hos en national leverandør.</td></tr>
+      <tr><td valign="top" style="width:26px;color:#415743;font-weight:bold;padding:4px 0;">✓</td><td style="padding:4px 0;"><b>Ingen risiko:</b> du sælger kun det, medarbejderne faktisk vælger. Intet lager hos os og ingen binding.</td></tr>
+      <tr><td valign="top" style="width:26px;color:#415743;font-weight:bold;padding:4px 0;">✓</td><td style="padding:4px 0;"><b>Én aflevering:</b> du afleverer det hele ét sted i Brørup. Vi klarer indpakning, navnemærkater, kundeservice og levering.</td></tr>
+      <tr><td valign="top" style="width:26px;color:#415743;font-weight:bold;padding:4px 0;">✓</td><td style="padding:4px 0;"><b>Synlighed:</b> din butik præsenteres med logo og tekst på <a href="https://www.gaverfordig.dk/butikker" style="color:#415743;">gaverfordig.dk/butikker</a>.</td></tr>
+    </table>
+  </td></tr>
+
+  <!-- Økonomi -->
+  <tr><td style="padding:22px 28px 4px;font-size:15px;line-height:1.6;">
+    <h2 style="font-size:20px;color:#415743;margin:0 0 10px;">Økonomien – helt enkelt</h2>
+    <p style="margin:0 0 12px;">Gaver For Dig tager <b>10 %</b> af prisgruppen for håndtering, kundeservice, pakning og levering ud til virksomhederne – ligesom en større national partner ville gøre. Så får virksomheden alle gaverne fra én adresse. <b>Din butik får 90 %:</b></p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-size:14px;">
+      <tr style="background:#415743;color:#ffffff;">
+        <td style="padding:9px 10px;font-weight:bold;">Prisgruppe<br><span style="font-weight:normal;font-size:12px;">ekskl. moms</span></td>
+        <td style="padding:9px 10px;font-weight:bold;">Varens normalpris<br><span style="font-weight:normal;font-size:12px;">mindst, inkl. moms</span></td>
+        <td style="padding:9px 10px;font-weight:bold;text-align:right;">Din butik får<br><span style="font-weight:normal;font-size:12px;">ekskl. moms</span></td>
+      </tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">300 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">375 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;text-align:right;font-weight:bold;">270 kr.</td></tr>
+      <tr style="background:#f6f4ef;"><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">500 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">625 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;text-align:right;font-weight:bold;">450 kr.</td></tr>
+      <tr><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">600 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">750 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;text-align:right;font-weight:bold;">540 kr.</td></tr>
+      <tr style="background:#f6f4ef;"><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">800 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;">1.000 kr.</td><td style="padding:8px 10px;border-bottom:1px solid #e4dfd4;text-align:right;font-weight:bold;">720 kr.</td></tr>
+      <tr><td style="padding:8px 10px;">1.100 kr.</td><td style="padding:8px 10px;">1.375 kr.</td><td style="padding:8px 10px;text-align:right;font-weight:bold;">990 kr.</td></tr>
+    </table>
+    <p style="margin:12px 0 0;font-size:14px;color:#4d5a52;">Medarbejderne ser aldrig priser – kun gaverne. Du afregnes samlet efter sæsonen for de gaver, du har afleveret.</p>
+  </td></tr>
+
+  <!-- Tilmelding -->
+  <tr><td style="padding:24px 28px 4px;font-size:15px;line-height:1.6;">
+    <h2 style="font-size:20px;color:#415743;margin:0 0 10px;">Sådan tilmelder du dig</h2>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="font-size:15px;line-height:1.5;">
+      <tr><td valign="top" style="width:30px;padding:5px 0;"><span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;background:#e9d5a0;color:#2e3d31;font-weight:bold;font-size:13px;">1</span></td><td style="padding:5px 0;">Gå til <a href="https://www.gaverfordig.dk/butik/tilmeld" style="color:#415743;font-weight:bold;">gaverfordig.dk/butik/tilmeld</a> og udfyld butikkens oplysninger. Det tager 2 minutter.</td></tr>
+      <tr><td valign="top" style="width:30px;padding:5px 0;"><span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;background:#e9d5a0;color:#2e3d31;font-weight:bold;font-size:13px;">2</span></td><td style="padding:5px 0;">Vi godkender butikken inden for 2 hverdage.</td></tr>
+      <tr><td valign="top" style="width:30px;padding:5px 0;"><span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;background:#e9d5a0;color:#2e3d31;font-weight:bold;font-size:13px;">3</span></td><td style="padding:5px 0;">Under <b>Min butik</b> uploader du jeres logo og skriver et par linjer om butikken.</td></tr>
+      <tr><td valign="top" style="width:30px;padding:5px 0;"><span style="display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;background:#e9d5a0;color:#2e3d31;font-weight:bold;font-size:13px;">4</span></td><td style="padding:5px 0;">Under <b>Mine produkter</b> opretter du dine gaver – ca. 10 minutter pr. gave.</td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:12px 28px 4px;">
+    <img src="https://www.gaverfordig.dk/mail/2-tilmeld.jpg" width="544" alt="Tilmeldingsformularen på gaverfordig.dk" style="display:block;width:100%;max-width:544px;height:auto;border:1px solid #e4dfd4;border-radius:8px;">
+  </td></tr>
+
+  <!-- Opret gave -->
+  <tr><td style="padding:24px 28px 4px;font-size:15px;line-height:1.6;">
+    <h2 style="font-size:20px;color:#415743;margin:0 0 10px;">Sådan opretter du en gave</h2>
+    <p style="margin:0 0 10px;">Portalen guider dig igennem, og til højre ser du hele tiden gaven, som medarbejderen vil se den:</p>
+    <ul style="margin:0 0 12px;padding-left:20px;">
+      <li style="margin-bottom:4px;"><b>Navn og beskrivelse</b> – fortæl hvad det er, hvorfor det er godt, og hvad der er i pakken. Ingen priser eller "tilbud".</li>
+      <li style="margin-bottom:4px;"><b>Kategori</b> – se listen herunder.</li>
+      <li style="margin-bottom:4px;"><b>1–5 billeder</b> – kvadratiske på lys baggrund. Telefonen er fint. Se <a href="https://www.gaverfordig.dk/billedguide" style="color:#415743;">billedguiden</a>.</li>
+      <li style="margin-bottom:4px;"><b>Normalpris</b> – skriv hvad varen koster i din butik, så foreslår vi den rigtige prisgruppe.</li>
+      <li><b>Antal</b> – hvor mange du kan levere i sæsonen. Gaven skjules automatisk, når de er valgt.</li>
+    </ul>
+  </td></tr>
+  <tr><td style="padding:6px 28px 4px;">
+    <img src="https://www.gaverfordig.dk/mail/3-produkt-tekst.jpg" width="544" alt="Opret en gave: tekst, kategori og forhåndsvisning" style="display:block;width:100%;max-width:544px;height:auto;border:1px solid #e4dfd4;border-radius:8px;">
+  </td></tr>
+  <tr><td style="padding:12px 28px 4px;">
+    <img src="https://www.gaverfordig.dk/mail/4-prisgruppe.jpg" width="544" alt="Normalpris og forslag til prisgruppe" style="display:block;width:100%;max-width:544px;height:auto;border:1px solid #e4dfd4;border-radius:8px;">
+  </td></tr>
+
+  <!-- Kategorier -->
+  <tr><td style="padding:24px 28px 4px;font-size:15px;line-height:1.6;">
+    <h2 style="font-size:20px;color:#415743;margin:0 0 10px;">Kategorier</h2>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;font-size:14px;line-height:1.45;">
+      <tr><td valign="top" style="padding:9px 10px;border-bottom:1px solid #e4dfd4;width:130px;font-weight:bold;color:#7b2d3b;">Mad og drikke</td><td style="padding:9px 10px;border-bottom:1px solid #e4dfd4;">Delikatesser, gavekurve, vin, øl, kaffe, chokolade. Varen skal holde mindst 3 måneder og må ikke kræve køl. Alkohol markeres, så kun medarbejdere over 18 kan vælge den. En allergentekst sættes automatisk på – ingrediensliste er valgfri.</td></tr>
+      <tr><td valign="top" style="padding:9px 10px;border-bottom:1px solid #e4dfd4;font-weight:bold;color:#7b2d3b;">Bolig</td><td style="padding:9px 10px;border-bottom:1px solid #e4dfd4;">Interiør, lys, keramik, køkkenudstyr, tekstiler, planter og blomster.</td></tr>
+      <tr><td valign="top" style="padding:9px 10px;border-bottom:1px solid #e4dfd4;font-weight:bold;color:#7b2d3b;">Mode</td><td style="padding:9px 10px;border-bottom:1px solid #e4dfd4;">Tørklæder, huer, tasker, smykker og accessories – helst one size.</td></tr>
+      <tr><td valign="top" style="padding:9px 10px;border-bottom:1px solid #e4dfd4;font-weight:bold;color:#7b2d3b;">Velvære</td><td style="padding:9px 10px;border-bottom:1px solid #e4dfd4;">Plejeprodukter, gaveæsker og gavebeviser på behandlinger.</td></tr>
+      <tr><td valign="top" style="padding:9px 10px;font-weight:bold;color:#7b2d3b;">Oplevelser</td><td style="padding:9px 10px;">Gavebeviser på middag, kurser, sport, smagninger og andre oplevelser.</td></tr>
+    </table>
+    <p style="margin:12px 0 0;font-size:14px;color:#4d5a52;"><b>Tip:</b> Butikker med gaver i 2–3 prisgrupper bliver valgt oftere.</p>
+  </td></tr>
+
+  <!-- Sæson -->
+  <tr><td style="padding:24px 28px 4px;font-size:15px;line-height:1.6;">
+    <h2 style="font-size:20px;color:#415743;margin:0 0 10px;">Julen 2026 – det praktiske</h2>
+    <ul style="margin:0;padding-left:20px;">
+      <li style="margin-bottom:4px;">Gaverne leveres til virksomhederne i <b>uge 47–51</b>.</li>
+      <li style="margin-bottom:4px;">Når medarbejderne har valgt, ser du i portalen præcis hvilke gaver og hvor mange – med en afleveringsseddel, du kan printe.</li>
+      <li style="margin-bottom:4px;">Du afleverer gaverne i egen emballage hos os i Brørup <b>senest 5 dage før levering</b>. Vi står for indpakning og navnemærkater.</li>
+      <li>Du kan altid sætte en gave på pause eller ændre antallet.</li>
+    </ul>
+  </td></tr>
+
+  <!-- CTA -->
+  <tr><td align="center" style="padding:28px 28px 8px;">
+    <a href="https://www.gaverfordig.dk/butik/tilmeld" style="display:inline-block;background:#415743;color:#ffffff;text-decoration:none;font-weight:bold;font-size:16px;padding:14px 28px;border-radius:8px;">Tilmeld din butik</a>
+  </td></tr>
+
+  <!-- Kontakt -->
+  <tr><td style="padding:20px 28px 28px;font-size:15px;line-height:1.6;">
+    <div style="background:#f3e7cf;border-radius:10px;padding:16px 18px;">
+      <b>Vil du høre mere?</b><br>
+      Ring eller skriv, så fortæller vi gerne mere – eller kigger forbi butikken og hjælper med at oprette de første gaver.
+    </div>
+    <p style="margin:20px 0 0;">Med venlig hilsen</p>
+    <p style="margin:4px 0 0;"><b>Mathias Bruhn</b><br>Gaver For Dig · Vinfordig ApS<br>Tlf. 28 14 49 95 · <a href="mailto:info@gaverfordig.dk" style="color:#415743;">info@gaverfordig.dk</a><br><a href="https://www.gaverfordig.dk" style="color:#415743;">www.gaverfordig.dk</a></p>
+  </td></tr>
+
+  <tr><td style="background:#2e3d31;color:#c9d1ca;font-size:12px;padding:14px 28px;">Gaver For Dig · Vinfordig ApS · CVR 35854258 · Merkurvej 1A, 6650 Brørup</td></tr>
+</table>
+</td></tr>
+</table>
+</div>
+<!-- MAIL SLUT -->
+
+<script>
+  function done(t) { var m = document.getElementById('msg'); m.textContent = t; setTimeout(function () { m.textContent = ''; }, 3000); }
+  function copyMail() {
+    var el = document.getElementById('mail');
+    var html = el.innerHTML, text = el.innerText;
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })])
+          .then(function () { done('Kopieret ✓'); }, fallback);
+        return;
+      }
+    } catch (e) {}
+    fallback();
+    function fallback() {
+      var r = document.createRange(); r.selectNode(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); done('Kopieret ✓'); } catch (e) { done('Markér mailen og tryk Ctrl+C'); }
+      s.removeAllRanges();
+    }
+  }
+  function copySubject() {
+    var t = document.getElementById('subject').innerText;
+    try { navigator.clipboard.writeText(t).then(function () { done('Emne kopieret ✓'); }); } catch (e) { done('Markér emnet og kopiér'); }
+  }
+</script>
+</body>
+</html>

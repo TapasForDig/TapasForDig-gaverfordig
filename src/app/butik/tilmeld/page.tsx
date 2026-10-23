@@ -102,7 +102,7 @@ export default async function ShopSignup({ searchParams }: { searchParams: Promi
               <li>Vi godkender dem inden for 2 hverdage.</li>
               <li>Medarbejderne vælger. Du har intet lager hos os.</li>
               <li>Efter vælgefristen ser du præcis, hvad der skal afleveres.</li>
-              <li>Du afleverer gaveindpakket i Brørup og får afregning efter sæsonen.</li>
+              <li>Du afleverer i egen emballage i Brørup og får afregning efter sæsonen.</li>
             </ol>
           </div>
         </aside>
