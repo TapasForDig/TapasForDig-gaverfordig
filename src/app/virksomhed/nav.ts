@@ -1,4 +1,4 @@
 export const companyNav = [
-  { href: '/virksomhed', label: 'Mine gaveordrer' },
-  { href: '/virksomhed/ny', label: 'Ny gaveordre' },
+  { href: '/virksomhed', label: 'Mine bestillinger' },
+  { href: '/bestil', label: 'Ny bestilling' },
 ];

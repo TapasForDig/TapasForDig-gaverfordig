@@ -8,9 +8,9 @@ export function TopBar() {
 // Header til de offentlige sider (forside, skatteregler)
 export function PublicHeader({ active }: { active?: string }) {
   const links = [
+    { href: '/bestil', label: 'Bestil gavekort' },
     { href: '/#saadan', label: 'Sådan virker det' },
     { href: '/skatteregler', label: 'Skatteregler' },
-    { href: '/virksomhed/opret', label: 'For virksomheder' },
     { href: '/butik/tilmeld', label: 'For butikker' },
     { href: '/login', label: 'Log ind' },
   ];

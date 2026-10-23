@@ -22,19 +22,59 @@ async function ensureAdmin(d: Driver) {
   }
 }
 
+// Prisgrupper 2026: pris pr. medarbejder ekskl. moms
+const PRICE_GROUPS: [number, string][] = [
+  [300, 'Skattefri julegave'],
+  [500, 'Skattefri julegave'],
+  [600, 'Skattefri julegave'],
+  [800, 'Højeste skattefri julegave (1.000 kr. inkl. moms)'],
+  [1100, 'Kun skattefri, hvis medarbejderen ikke får andre gaver i året (1.375 kr. inkl. moms)'],
+];
+
+const DEFAULT_SETTINGS: [string, string][] = [
+  ['indkoebsrabat_pct', ''],
+  ['logistik_adresse', '[Adresse på logistikcentralen], Brørup'],
+  ['gebyr_hjemlevering_kr', '75'],
+  ['indpakning_kr', '30'],
+  ['min_antal', '5'],
+  ['leveringsuge_fra', '46'],
+  ['leveringsuge_til', '51'],
+  ['leveringsuger_lukket', '52,53'],
+  ['vaelgefrist_dage_foer', '19'],
+  ['aflevering_dage_foer', '5'],
+];
+
+// Engangsændringer på eksisterende databaser
+export async function migrate(d: Driver) {
+  await d.query(
+    `insert into settings (key, value) values ${DEFAULT_SETTINGS.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(',')} on conflict do nothing`,
+    DEFAULT_SETTINGS.flat(),
+  );
+  // Prisgrupper v2: 300/500/600/800/1100 ekskl. moms (tidligere 300/500/750/1000/1400 inkl. moms)
+  const claim = await d.query(`insert into settings (key, value) values ('prisgrupper_v2', now()::text) on conflict (key) do nothing returning key`);
+  if (claim.rows.length === 0) return;
+  const old = (await d.query<{ id: number }>('select id from price_categories order by sort, value_kr')).rows;
+  for (let i = 0; i < PRICE_GROUPS.length; i++) {
+    const [value, note] = PRICE_GROUPS[i];
+    if (old[i]) {
+      await d.query('update price_categories set name = $1, value_kr = $2, note = $3, sort = $4 where id = $5', [`${value} kr.`, value, note, i, old[i].id]);
+    } else {
+      await d.query('insert into price_categories (name, value_kr, note, sort) values ($1,$2,$3,$4)', [`${value} kr.`, value, note, i]);
+    }
+  }
+}
+
 export async function seedIfEmpty(d: Driver) {
   await ensureAdmin(d);
 
   // Kun én server må lave grunddata, og kun én gang (flere Vercel-instanser kan starte samtidig)
   const claim = await d.query(`insert into settings (key, value) values ('seeded', now()::text) on conflict (key) do nothing returning key`);
   if (claim.rows.length === 0) return;
-  // Databaser fra før denne markør: har allerede priskategorier → spring over
-  const existing = await d.query<{ n: number }>('select count(*)::int as n from price_categories');
-  if (existing.rows[0].n > 0) return;
+  // Databaser fra før denne markør, der allerede er i brug → spring over
+  const existing = await d.query<{ n: number }>('select (select count(*) from shops) + (select count(*) from companies) as n');
+  if (Number(existing.rows[0].n) > 0) return;
 
   const ins = async <T = { id: number }>(sql: string, p: unknown[]) => (await d.query<T>(sql, p)).rows[0];
-
-  await d.query(`insert into settings (key, value) values ('indkoebsrabat_pct',''),('gebyr_pr_modtager_kr','0'),('logistik_adresse','[Adresse på logistikcentralen], Brørup') on conflict do nothing`);
 
   if (process.env.NO_DEMO === '1') {
     await seedCategories(d);
@@ -70,14 +110,14 @@ export async function seedIfEmpty(d: Driver) {
        values ($1,$2,$3,$4,$5,$6,$7,$8) returning id`,
       [shopId, name, desc, kind, cat, stock, alcohol, status],
     );
-  const p1 = await prod(vfd.id, 'Trækasse med tre italienske vine', 'Egenimporteret rødvin, hvidvin og bobler, udvalgt til julebordet. Leveres i trækasse med gavebånd.', 'Mad og drikke', cats[1000], 60, true);
-  const p2 = await prod(tfd.id, 'Delikatessekurv med tapas-favoritter', 'Charcuteri, oste, oliven og pesto fra små producenter i Sydeuropa. Holdbar i mindst 3 måneder.', 'Mad og drikke', cats[1000], 50);
-  const p3 = await prod(inter.id, 'Lysestager i messing (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[1000], 20);
-  const p4 = await prod(blom.id, 'Juledekoration med gavekort til påfyld (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[1000], 25);
-  const p5 = await prod(wel.id, 'Gavebevis på behandling (demo)', 'Eksempelprodukt. Leveres som fysisk gavebevis med navn, gyldigt i 12 måneder.', 'Oplevelser', cats[1000], 15);
+  const p1 = await prod(vfd.id, 'Trækasse med tre italienske vine', 'Egenimporteret rødvin, hvidvin og bobler, udvalgt til julebordet. Leveres i trækasse med gavebånd.', 'Mad og drikke', cats[800], 60, true);
+  const p2 = await prod(tfd.id, 'Delikatessekurv med tapas-favoritter', 'Charcuteri, oste, oliven og pesto fra små producenter i Sydeuropa. Holdbar i mindst 3 måneder.', 'Mad og drikke', cats[800], 50);
+  const p3 = await prod(inter.id, 'Lysestager i messing (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[800], 20);
+  const p4 = await prod(blom.id, 'Juledekoration med gavekort til påfyld (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[800], 25);
+  const p5 = await prod(wel.id, 'Gavebevis på behandling (demo)', 'Eksempelprodukt. Leveres som fysisk gavebevis med navn, gyldigt i 12 måneder.', 'Oplevelser', cats[800], 15);
   await prod(vfd.id, 'To flasker rødvin i gaveæske', 'To fyldige rødvine fra Sydeuropa i gaveæske.', 'Mad og drikke', cats[500], 80, true);
   await prod(tfd.id, 'Lille delikatessegave', 'Pesto, oliven og kiks fra vores egenimport.', 'Mad og drikke', cats[300], 80);
-  await prod(inter.id, 'Plaid i uld (demo)', 'Eksempelprodukt. Venter på godkendelse.', 'Bolig', cats[1000], 10, false, 'pending');
+  await prod(inter.id, 'Plaid i uld (demo)', 'Eksempelprodukt. Venter på godkendelse.', 'Bolig', cats[800], 10, false, 'pending');
 
   const company = await ins(
     `insert into companies (name, cvr, address, town, contact_name, phone, email) values
@@ -89,7 +129,7 @@ export async function seedIfEmpty(d: Driver) {
        delivery_address, delivery_contact, confirmed_at, invited_at)
      values ($1,$2,$3,'Julegave 2026','Tak for en stærk indsats i år. Vælg den gave, der passer dig bedst – glædelig jul!',$4,'invited',
        '[Leveringsadresse], Vejen','[Kontaktperson, telefon]', now(), now()) returning id`,
-    [company.id, season.id, cats[1000], p1.id],
+    [company.id, season.id, cats[800], p1.id],
   );
   const depts = ['Salg', 'Lager', 'Administration', 'Produktion'];
   const picks = [p1.id, p2.id, p3.id, p1.id, p4.id, p5.id, p2.id];
@@ -119,18 +159,16 @@ export async function seedIfEmpty(d: Driver) {
 }
 
 async function seedCategories(d: Driver): Promise<Record<number, number>> {
-  const list: [string, number, string][] = [
-    ['Lille', 300, 'Kundegaver, påskegaver'],
-    ['Mellem', 500, ''],
-    ['Stor', 750, ''],
-    ['Julegave max', 1000, 'Højeste skattefri julegave, uanset andre gaver i året'],
-    ['Bagatel max', 1400, 'Kun skattefri, hvis medarbejderen ikke har fået andre gaver i året (2026)'],
-  ];
   const map: Record<number, number> = {};
+  const existing = (await d.query<{ id: number; value_kr: number }>('select id, value_kr from price_categories')).rows;
+  if (existing.length) {
+    for (const c of existing) map[c.value_kr] = c.id;
+    return map;
+  }
   let sort = 0;
-  for (const [name, value, note] of list) {
+  for (const [value, note] of PRICE_GROUPS) {
     const r = await d.query<{ id: number }>('insert into price_categories (name, value_kr, note, sort) values ($1,$2,$3,$4) returning id', [
-      name,
+      `${value} kr.`,
       value,
       note,
       sort++,

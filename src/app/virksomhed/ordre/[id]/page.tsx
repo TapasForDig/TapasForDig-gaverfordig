@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Badge, Notice, Progress, Shell, Stat } from '@/components/ui';
 import { requireRole } from '@/lib/auth';
 import { one, q } from '@/lib/db';
@@ -28,6 +28,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const sp = await searchParams;
   const o = await getOrder(Number(id));
   if (!o || (u.role !== 'admin' && o.company_id !== u.company_id)) notFound();
+  if (o.purchase_id) redirect(`/virksomhed/bestilling/${o.purchase_id}`);
   const [season, stats, rows, gifts, fee] = await Promise.all([
     one<Season>('select * from seasons where id = $1', [o.season_id]),
     orderStats(o.id),

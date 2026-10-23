@@ -12,6 +12,7 @@ interface Handoff {
   code: string;
   handed_at: Date | null;
   received_at: Date | null;
+  dropoff_deadline: Date | null;
   n: number;
 }
 interface Line {
@@ -36,7 +37,7 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
   const { shop, shops } = await myShop(sp.butik);
   const [season, dropAddr] = await Promise.all([activeSeason(), getSetting('logistik_adresse')]);
   const handoffs = await q<Handoff>(
-    `select h.id, h.code, h.handed_at, h.received_at, (select count(*)::int from recipients r where r.handoff_id = h.id) as n
+    `select h.id, h.code, h.handed_at, h.received_at, h.dropoff_deadline, (select count(*)::int from recipients r where r.handoff_id = h.id) as n
        from handoffs h where h.shop_id = $1 order by h.created_at desc`,
     [shop.id],
   );
@@ -58,7 +59,8 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
   );
   const open = handoffs.filter((h) => !h.received_at);
   const total = open.reduce((s, h) => s + h.n, 0);
-  const left = daysLeft(season?.dropoff_deadline);
+  const nextDrop = open.map((h) => h.dropoff_deadline).filter(Boolean).sort((a, b) => +new Date(a!) - +new Date(b!))[0] ?? season?.dropoff_deadline ?? null;
+  const left = daysLeft(nextDrop);
   const q0 = shops ? `?butik=${shop.id}` : '';
 
   return (
@@ -94,7 +96,7 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
         <div className="dark-card row between" style={{ gap: 20 }}>
           <div>
             <div className="small muted">Aflevering på logistikcentralen</div>
-            <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>Senest {season?.dropoff_deadline ? datoTid(season.dropoff_deadline) : '[ikke sat]'}</div>
+            <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>{nextDrop ? `Senest ${datoTid(nextDrop)}` : 'Ingen afleveringer endnu'}</div>
             <div className="small muted">
               Gaver For Dig · {dropAddr}
               {left != null && left >= 0 ? ` · ${left} dage tilbage` : ''}
@@ -124,7 +126,9 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
               <div className="card-head">
                 <div>
                   <h2>Afleveringsseddel {h.code}</h2>
-                  <div className="small muted">{h.n} gaver</div>
+                  <div className="small muted">
+                    {h.n} gaver{h.dropoff_deadline ? ` · afleveres senest ${datoTid(h.dropoff_deadline)}` : ''}
+                  </div>
                 </div>
                 <div className="row">
                   {h.received_at ? (

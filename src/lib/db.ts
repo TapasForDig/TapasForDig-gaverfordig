@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { SCHEMA } from './schema';
-import { seedIfEmpty } from './seed';
+import { migrate, seedIfEmpty } from './seed';
 
 type Row = Record<string, unknown>;
 
@@ -61,6 +61,7 @@ export function db(): Promise<Driver> {
       }
       if (current !== version) {
         await d.exec(SCHEMA);
+        await migrate(d);
         await d.query(`insert into settings (key, value) values ('schema_version', $1) on conflict (key) do update set value = excluded.value`, [version]);
         await seedIfEmpty(d);
       }

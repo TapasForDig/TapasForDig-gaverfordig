@@ -17,8 +17,13 @@ export interface User {
 export interface Recipient {
   id: number;
   order_id: number;
-  name: string;
-  email: string;
+  name: string | null;
+  email: string | null;
+  code: string | null;
+  address: string | null;
+  zip: string | null;
+  city: string | null;
+  phone: string | null;
   token: string;
   opened_at: Date | null;
   age_confirmed: boolean;

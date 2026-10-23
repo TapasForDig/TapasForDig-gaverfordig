@@ -11,7 +11,7 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
   const { id } = await params;
   const sp = await searchParams;
   const { shop } = await myShop(sp.butik);
-  const h = await one<{ id: number; code: string }>('select id, code from handoffs where id = $1 and shop_id = $2', [Number(id), shop.id]);
+  const h = await one<{ id: number; code: string; dropoff_deadline: Date | null }>('select id, code, dropoff_deadline from handoffs where id = $1 and shop_id = $2', [Number(id), shop.id]);
   if (!h) notFound();
   const [season, dropAddr] = await Promise.all([activeSeason(), getSetting('logistik_adresse')]);
   const lines = await q<{ product: string; company: string; n: number }>(
@@ -37,7 +37,7 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
             <div>
               Seddel <b>{h.code}</b> · {total} gaver
             </div>
-            <div className="small">Afleveres senest {datoTid(season?.dropoff_deadline)} · {dropAddr}</div>
+            <div className="small">Afleveres senest {datoTid(h.dropoff_deadline ?? season?.dropoff_deadline)} · {dropAddr}</div>
           </div>
           <img src={qr} alt={`QR-kode ${h.code}`} width={150} height={150} />
         </div>

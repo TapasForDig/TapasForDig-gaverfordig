@@ -13,8 +13,15 @@ async function close(fd: FormData) {
   if (fd.get('confirm') !== 'ja') redirect('/admin?m=' + encodeURIComponent('!Sæt kryds for at bekræfte'));
   const season = await activeSeason();
   if (!season) redirect('/admin');
-  const r = await closeChoosing(season.id, u.email);
-  redirect('/admin?m=' + encodeURIComponent(`Vælgeperioden er lukket. ${r.defaults} fik standardgaven. ${r.handoffs} butikker har fået deres afleveringsliste.`));
+  const r = await closeChoosing(season.id, u.email, fd.get('force') === 'ja');
+  redirect(
+    '/admin?m=' +
+      encodeURIComponent(
+        r.orders === 0
+          ? '!Ingen ordrer har udløbet vælgefrist endnu'
+          : `${r.orders} ordrer er lukket. ${r.defaults} fik standardgaven. ${r.handoffs} butikker har fået deres afleveringsliste.${r.noDefault ? ` OBS: ${r.noDefault} gavekort har hverken valg eller standardgave.` : ''}`,
+      ),
+  );
 }
 
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
@@ -32,11 +39,13 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const [pend] = await q<{ shops: number; products: number }>(
     `select (select count(*)::int from shops where status = 'pending') as shops, (select count(*)::int from products where status = 'pending') as products`,
   );
-  const orders = await q<{ id: number; company: string; title: string; status: string; total: number; chosen: number; value_kr: number; no_default: boolean }>(
+  const orders = await q<{ id: number; company: string; title: string; status: string; total: number; chosen: number; value_kr: number; no_default: boolean; deadline: Date | null; due: boolean }>(
     `select o.id, c.name as company, o.title, o.status, pc.value_kr, o.default_product_id is null as no_default,
+            coalesce(o.choose_deadline, ss.choose_deadline) as deadline, coalesce(o.choose_deadline, ss.choose_deadline) < now() as due,
             (select count(*)::int from recipients r where r.order_id = o.id) as total,
             (select count(chosen_product_id)::int from recipients r where r.order_id = o.id) as chosen
        from gift_orders o join companies c on c.id = o.company_id join price_categories pc on pc.id = o.price_category_id
+       join seasons ss on ss.id = o.season_id
       where o.season_id = $1 order by o.created_at desc`,
     [sid],
   );
@@ -50,6 +59,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     'select at, actor, entity, action, detail from events order by id desc limit 15',
   );
   const openOrders = orders.filter((o) => ['confirmed', 'invited'].includes(o.status));
+  const dueOrders = openOrders.filter((o) => o.due);
+  const nextDeadline = openOrders.filter((o) => !o.due && o.deadline).sort((a, b) => +new Date(a.deadline!) - +new Date(b.deadline!))[0]?.deadline;
   const pct = totals.recipients ? Math.round((totals.chosen / totals.recipients) * 100) : 0;
 
   return (
@@ -57,7 +68,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <div className="stack">
         <div>
           <div className="eyebrow">
-            {season?.name} · bestil senest {dato(season?.order_deadline)} · vælgefrist {dato(season?.choose_deadline)}
+            {season?.name}
           </div>
           <h1>Overblik</h1>
         </div>
@@ -125,19 +136,28 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           <aside className="side">
             <div className="card">
               <form action={close} className="form">
-                <h2>Luk vælgeperioden</h2>
+                <h2>Luk ordrer med udløbet vælgefrist</h2>
                 <p className="small muted">
-                  Gør det når vælgefristen ({datoTid(season?.choose_deadline)}) er udløbet. Dem der ikke har valgt, får virksomhedens standardgave. Hver butik får sin
-                  afleveringsliste på mail.
+                  Hver bestilling har sin egen vælgefrist ud fra leveringsugen. Når fristen er udløbet, lukker du ordrerne her. Dem der ikke har valgt, får standardgaven,
+                  og hver butik får sin afleveringsliste på mail.
                 </p>
                 <p className="small">
-                  Berører <b>{openOrders.length}</b> ordrer med <b>{openOrders.reduce((s, o) => s + (o.total - o.chosen), 0)}</b> modtagere, der ikke har valgt.
+                  Klar til lukning: <b>{dueOrders.length}</b> ordrer med <b>{dueOrders.reduce((s, o) => s + (o.total - o.chosen), 0)}</b> gavekort uden valg.
+                  {nextDeadline && (
+                    <>
+                      <br />
+                      Næste frist: {datoTid(nextDeadline)}
+                    </>
+                  )}
                 </p>
                 <label className="check small">
-                  <input type="checkbox" name="confirm" value="ja" /> Ja, luk vælgeperioden nu
+                  <input type="checkbox" name="confirm" value="ja" /> Ja, luk nu
+                </label>
+                <label className="check small">
+                  <input type="checkbox" name="force" value="ja" /> Luk også ordrer, hvor fristen ikke er udløbet ({openOrders.length - dueOrders.length})
                 </label>
                 <button className="btn wine" type="submit" disabled={openOrders.length === 0}>
-                  Luk vælgeperioden
+                  Luk ordrer
                 </button>
               </form>
             </div>

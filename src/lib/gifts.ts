@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { logEvent, one, q } from './db';
-import { appUrl, dato } from './format';
+import { appUrl, dato, datoTid } from './format';
 import { sendMail } from './mail';
 
 export interface Product {
@@ -60,6 +60,12 @@ export interface Order {
   packed_at: Date | null;
   delivered_at: Date | null;
   delivered_to: string | null;
+  purchase_id: number | null;
+  quantity: number | null;
+  choose_deadline: Date | null;
+  delivery_date: Date | null;
+  delivery_mode: 'company' | 'home';
+  wrapping: boolean;
 }
 
 export const ORDER_STATUS: Record<string, string> = {
@@ -204,51 +210,63 @@ function handoffCode() {
   return 'GFD-' + crypto.randomBytes(3).toString('hex').toUpperCase();
 }
 
-// Lukker vælgeperioden: tildeler standardgave til dem der ikke har valgt,
-// og laver én afleveringsseddel pr. butik med alle valgte gaver.
-export async function closeChoosing(seasonId: number, actor: string) {
+// Lukker vælgeperioden for alle ordrer, hvis frist er udløbet (eller alle ordrer i sæsonen med force):
+// tildeler standardgave til dem der ikke har valgt, og laver én afleveringsseddel pr. butik.
+export async function closeChoosing(seasonId: number, actor: string, force = false) {
+  const due = await q<{ id: number }>(
+    `select o.id from gift_orders o join seasons s on s.id = o.season_id
+      where o.season_id = $1 and o.status in ('confirmed','invited')
+        and ($2 or coalesce(o.choose_deadline, s.choose_deadline) < now())`,
+    [seasonId, force],
+  );
+  const ids = due.map((d) => d.id);
+  if (ids.length === 0) return { orders: 0, defaults: 0, handoffs: 0, noDefault: 0 };
   const defaults = await q<{ id: number }>(
     `update recipients r set chosen_product_id = o.default_product_id, chosen_at = now(), is_default = true
        from gift_orders o
-      where r.order_id = o.id and o.season_id = $1 and o.status in ('confirmed','invited')
-        and r.chosen_product_id is null and o.default_product_id is not null
+      where r.order_id = o.id and o.id = any($1::int[]) and r.chosen_product_id is null and o.default_product_id is not null
       returning r.id`,
-    [seasonId],
+    [ids],
   );
-  await q(`update gift_orders set status = 'closed' where season_id = $1 and status in ('confirmed','invited')`, [seasonId]);
+  const noDefault = (await one<{ n: number }>('select count(*)::int as n from recipients where order_id = any($1::int[]) and chosen_product_id is null', [ids]))!.n;
+  await q(`update gift_orders set status = 'closed' where id = any($1::int[])`, [ids]);
 
-  const shops = await q<{ shop_id: number; name: string; email: string | null; n: number }>(
-    `select p.shop_id, s.name, s.email, count(*)::int as n
+  const dropDays = Number(await getSetting('aflevering_dage_foer')) || 5;
+  const shops = await q<{ shop_id: number; name: string; email: string | null; n: number; first_delivery: Date | null }>(
+    `select p.shop_id, s.name, s.email, count(*)::int as n, min(o.delivery_date) as first_delivery
        from recipients r join products p on p.id = r.chosen_product_id
        join gift_orders o on o.id = r.order_id join shops s on s.id = p.shop_id
-      where o.season_id = $1 and o.status = 'closed' and r.handoff_id is null
+      where o.id = any($1::int[]) and r.handoff_id is null
       group by p.shop_id, s.name, s.email`,
-    [seasonId],
+    [ids],
   );
   const season = await one<Season>('select * from seasons where id = $1', [seasonId]);
   for (const s of shops) {
+    let dropoff: Date | null = season?.dropoff_deadline ? new Date(season.dropoff_deadline) : null;
+    if (s.first_delivery) {
+      dropoff = new Date(s.first_delivery);
+      dropoff.setUTCDate(dropoff.getUTCDate() - dropDays);
+      dropoff.setUTCHours(14, 0, 0, 0); // kl. 16 dansk vintertid
+    }
     const h = await one<{ id: number; code: string }>(
-      'insert into handoffs (shop_id, season_id, code) values ($1,$2,$3) returning id, code',
-      [s.shop_id, seasonId, handoffCode()],
+      'insert into handoffs (shop_id, season_id, code, dropoff_deadline) values ($1,$2,$3,$4) returning id, code',
+      [s.shop_id, seasonId, handoffCode(), dropoff],
     );
     await q(
-      `update recipients r set handoff_id = $1
-         from products p, gift_orders o
-        where p.id = r.chosen_product_id and o.id = r.order_id
-          and p.shop_id = $2 and o.season_id = $3 and r.handoff_id is null and o.status = 'closed'`,
-      [h!.id, s.shop_id, seasonId],
+      `update recipients r set handoff_id = $1 from products p
+        where p.id = r.chosen_product_id and p.shop_id = $2 and r.order_id = any($3::int[]) and r.handoff_id is null`,
+      [h!.id, s.shop_id, ids],
     );
     if (s.email) {
       await sendMail(
         s.email,
         `Gaver til aflevering: ${s.n} stk.`,
-        `Hej ${s.name}\n\nVælgeperioden er slut, og I skal levere ${s.n} gaver til logistikcentralen.\nAfleveringsfrist: ${dato(season?.dropoff_deadline ?? null)}\n\nSe listen og print afleveringssedlen i butiksportalen: ${appUrl()}/butik\n\nVenlig hilsen\nGaver For Dig`,
+        `Hej ${s.name}\n\nMedarbejderne har valgt, og I skal levere ${s.n} gaver til logistikcentralen.\nAfleveringsfrist: ${datoTid(dropoff)}\n\nSe listen og print afleveringssedlen i butiksportalen: ${appUrl()}/butik\n\nVenlig hilsen\nGaver For Dig`,
       );
     }
   }
-  await q('update seasons set closed_at = now() where id = $1', [seasonId]);
-  await logEvent(actor, 'season', seasonId, 'vælgeperiode lukket', `${defaults.length} standardgaver, ${shops.length} afleveringssedler`);
-  return { defaults: defaults.length, handoffs: shops.length };
+  await logEvent(actor, 'season', seasonId, 'vælgeperiode lukket', `${ids.length} ordrer, ${defaults.length} standardgaver, ${shops.length} afleveringssedler, ${noDefault} uden gave`);
+  return { orders: ids.length, defaults: defaults.length, handoffs: shops.length, noDefault };
 }
 
 export async function getSetting(key: string): Promise<string> {

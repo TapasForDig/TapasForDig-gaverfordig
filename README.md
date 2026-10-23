@@ -36,7 +36,19 @@ Start forfra med ny demo-data: stop serveren og kør `npm run seed`.
 | Logistik | `/logistik` | Scan/indtast seddel, registrér modtaget/mangler, pakkeliste og navnemærkater, pakket/leveret |
 | Admin | `/admin` | Godkend butikker/produkter, frister og priskategorier, luk vælgeperioden, fakturering og afregning, mails, hændelseslog |
 
-## Flowet
+## Kunderejsen for virksomheder (gavekort)
+
+1. `/bestil` trin 1: vælg antal pr. prisgruppe (300/500/600/800/1.100 kr. ekskl. moms, min. 5). "X gaver i prisgruppen" åbner en pop-up med udvalget.
+2. Trin 2: levering til virksomheden (gratis) eller hjemmeadresser (gebyr pr. gave), mulepose eller gaveindpakning (gebyr pr. gave), gavekoder på mail til virksomheden eller sendt direkte til medarbejderne.
+3. Trin 3: leveringsuge. Vælgefristen er søndag 19 dage før fredagens levering (kan ændres i admin).
+4. Trin 4: firmaoplysninger med CVR-opslag, PO/rekvisitionsnr., EAN, kontaktperson, faktura eller EAN.
+5. Efter bestilling: ordrebekræftelse, mail med alle gavekoder (eller koder sendt til medarbejderne fra den uploadede liste), konto til oversigten (`/virksomhed/bestilling/<id>`) med print af gavekort og Excel-fil.
+6. Medarbejderen går til `/gave`, skriver koden (eller klikker sit link), skriver navn (og adresse ved hjemmelevering) og vælger gave.
+7. Admin lukker ordrer, når vælgefristen er udløbet. Logistik kan hente en fil til Shipmondo ved hjemmelevering.
+
+Gebyrer, minimumskøb, leveringsuger og frister ændres under Admin → Sæson og priser.
+
+## Flowet (internt)
 
 1. Butik opretter produkt → admin godkender.
 2. Virksomhed opretter ordre → tilføjer modtagere → bekræfter → sender invitationer.

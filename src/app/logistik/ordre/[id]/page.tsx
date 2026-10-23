@@ -10,7 +10,11 @@ import { sendMail } from '@/lib/mail';
 
 interface Item {
   id: number;
-  name: string;
+  name: string | null;
+  code: string | null;
+  address: string | null;
+  zip: string | null;
+  city: string | null;
   department: string | null;
   product: string;
   shop: string;
@@ -45,7 +49,7 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
   const o = await getOrder(Number(id));
   if (!o) notFound();
   const items = await q<Item>(
-    `select r.id, r.name, r.department, p.name as product, s.name as shop, r.received_at
+    `select r.id, r.name, r.code, r.address, r.zip, r.city, r.department, p.name as product, s.name as shop, r.received_at
        from recipients r join products p on p.id = r.chosen_product_id join shops s on s.id = p.shop_id
       where r.order_id = $1 order by r.department nulls last, r.name`,
     [o.id],
@@ -65,6 +69,11 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
         <Link href="/logistik">← Alle ordrer</Link>
         <div className="row">
           <PrintButton label="Print pakkeliste og mærkater" />
+          {o.delivery_mode === 'home' && (
+            <a className="btn small outline" href={`/logistik/ordre/${o.id}/shipmondo`}>
+              Hent fil til Shipmondo
+            </a>
+          )}
           {o.status === 'closed' && (
             <form action={setStatus}>
               <input type="hidden" name="order" value={o.id} />
@@ -106,6 +115,11 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
           </div>
           <Badge tone={o.status === 'delivered' ? 'ok' : undefined}>{ORDER_STATUS[o.status]}</Badge>
         </div>
+        <div className="row" style={{ gap: 8 }}>
+          <Badge tone={o.wrapping ? 'wine' : undefined}>{o.wrapping ? 'Gaveindpakning' : 'Mulepose'}</Badge>
+          <Badge tone={o.delivery_mode === 'home' ? 'warn' : undefined}>{o.delivery_mode === 'home' ? 'Sendes til hjemmeadresser' : 'Samlet til virksomheden'}</Badge>
+          {o.delivery_date && <Badge>Leveres senest {dato(o.delivery_date)}</Badge>}
+        </div>
         <table className="table" style={{ minWidth: 0 }}>
           <thead>
             <tr>
@@ -137,7 +151,12 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
           <tbody>
             {items.map((i) => (
               <tr key={i.id}>
-                <td>{i.name}</td>
+                <td>
+                  {i.name ?? <span className="muted">Kode {i.code}</span>}
+                  {o.delivery_mode === 'home' && (
+                    <div className="small">{i.address ? `${i.address}, ${i.zip} ${i.city}` : <span style={{ color: 'var(--bad)' }}>Mangler adresse</span>}</div>
+                  )}
+                </td>
                 <td>{i.department ?? ''}</td>
                 <td>{i.product}</td>
                 <td className="no-print">{i.received_at ? <Badge tone="ok">Ja</Badge> : <Badge tone="bad">Mangler</Badge>}</td>
@@ -162,7 +181,12 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
           {items.map((i) => (
             <div key={i.id} className="label-card">
               <img src="/logo.png" alt="Gaver For Dig" width={110} height={17} />
-              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{i.name}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{i.name ?? `Gavekode ${i.code}`}</div>
+              {o.delivery_mode === 'home' && i.address && (
+                <div className="small">
+                  {i.address}, {i.zip} {i.city}
+                </div>
+              )}
               <div className="small">
                 {o.company_name}
                 {i.department ? ` · ${i.department}` : ''}

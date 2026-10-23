@@ -39,22 +39,19 @@ async function saveCategories(fd: FormData) {
 async function saveSettings(fd: FormData) {
   'use server';
   await requireRole('admin');
-  for (const key of ['indkoebsrabat_pct', 'gebyr_pr_modtager_kr', 'logistik_adresse']) {
+  for (const key of SETTING_KEYS) {
     await q('insert into settings (key, value) values ($1,$2) on conflict (key) do update set value = excluded.value', [key, str(fd, key)]);
   }
   redirect('/admin/saeson?m=' + encodeURIComponent('Indstillinger gemt'));
 }
 
+const SETTINGS: [string, string, string, string][] = [['indkoebsrabat_pct', 'Butikkernes rabat til Gaver For Dig [%]', 'number', 'Bruges til indkøbspris, når et produkt ikke har sin egen. Tomt = aftales pr. produkt.'], ['gebyr_hjemlevering_kr', 'Levering til hjemmeadresse pr. gave [kr. ekskl. moms]', 'number', ''], ['indpakning_kr', 'Gaveindpakning pr. gave [kr. ekskl. moms]', 'number', ''], ['min_antal', 'Minimumskøb [antal gaver]', 'number', ''], ['leveringsuge_fra', 'Første leveringsuge', 'number', 'Ugenummer, fx 46'], ['leveringsuge_til', 'Sidste leveringsuge', 'number', 'Fx 51'], ['leveringsuger_lukket', 'Lukkede uger', 'text', 'Kommasepareret, fx 52,53'], ['vaelgefrist_dage_foer', 'Vælgefrist: dage før levering', 'number', '19 dage = søndag knap tre uger før fredagens levering'], ['aflevering_dage_foer', 'Butikkernes aflevering: dage før levering', 'number', ''], ['logistik_adresse', 'Logistikcentralens adresse', 'text', ''], ['kontakt_telefon', 'Kontakttelefon [vises i kassen]', 'text', ''], ['kontakt_email', 'Kontakt-e-mail [vises i kassen]', 'text', '']];
+const SETTING_KEYS = SETTINGS.map((f) => f[0]);
+
 export default async function SeasonAdmin({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
   await requireRole('admin');
   const sp = await searchParams;
-  const [s, cats, rabat, gebyr, adr] = await Promise.all([
-    activeSeason(),
-    categories(),
-    getSetting('indkoebsrabat_pct'),
-    getSetting('gebyr_pr_modtager_kr'),
-    getSetting('logistik_adresse'),
-  ]);
+  const [s, cats, values] = await Promise.all([activeSeason(), categories(), Promise.all(SETTING_KEYS.map((k) => getSetting(k)))]);
   return (
     <Shell area="Admin" nav={adminNav} active="/admin/saeson">
       <div className="stack">
@@ -97,7 +94,7 @@ export default async function SeasonAdmin({ searchParams }: { searchParams: Prom
 
             <form action={saveCategories} className="card form">
               <h2>Priskategorier</h2>
-              <p className="hint">Gavens værdi inkl. moms. Skattefri julegave (tingsgave) 2026: maks. 1.000 kr. Bagatelgrænse 2026: 1.400 kr. (2027: 1.500 kr.).</p>
+              <p className="hint">Pris pr. medarbejder ekskl. moms. Skattefri julegave 2026: højst 800 kr. ekskl. moms (1.000 kr. inkl.). Bagatelgrænse 2026: 1.400 kr. inkl. moms (2027: 1.500 kr.).</p>
               {cats.map((c) => (
                 <div key={c.id} className="grid-2" style={{ gridTemplateColumns: '1fr 120px 2fr' }}>
                   <input name={`name-${c.id}`} type="text" defaultValue={c.name} aria-label="Navn" />
@@ -117,21 +114,14 @@ export default async function SeasonAdmin({ searchParams }: { searchParams: Prom
           </div>
           <aside className="side">
             <form action={saveSettings} className="card form">
-              <h2>Økonomi og drift</h2>
-              <div className="field">
-                <label htmlFor="indkoebsrabat_pct">Butikkernes rabat til Gaver For Dig (%)</label>
-                <input id="indkoebsrabat_pct" name="indkoebsrabat_pct" type="number" min={0} max={90} defaultValue={rabat} />
-                <span className="hint">Bruges til at beregne indkøbspris, når et produkt ikke har sin egen. Tomt = aftales pr. produkt.</span>
-              </div>
-              <div className="field">
-                <label htmlFor="gebyr_pr_modtager_kr">Gebyr pr. modtager til virksomheden (kr.)</label>
-                <input id="gebyr_pr_modtager_kr" name="gebyr_pr_modtager_kr" type="number" min={0} defaultValue={gebyr} />
-                <span className="hint">Fx pakning og levering. Nu: {kr(Number(gebyr) || 0)}</span>
-              </div>
-              <div className="field">
-                <label htmlFor="logistik_adresse">Logistikcentralens adresse</label>
-                <input id="logistik_adresse" name="logistik_adresse" type="text" defaultValue={adr} />
-              </div>
+              <h2>Webshop og drift</h2>
+              {SETTINGS.map(([key, label, type, hint], i) => (
+                <div key={key} className="field">
+                  <label htmlFor={key}>{label}</label>
+                  <input id={key} name={key} type={type} defaultValue={values[i]} />
+                  {hint && <span className="hint">{hint}</span>}
+                </div>
+              ))}
               <button className="btn outline" type="submit">
                 Gem
               </button>

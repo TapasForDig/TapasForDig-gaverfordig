@@ -50,7 +50,7 @@ async function save(fd: FormData) {
     if (description.length < 120) problems.push('en beskrivelse på mindst 120 tegn');
     if (!(KINDS as readonly string[]).includes(kind)) problems.push('en kategori');
     if (!cat) problems.push('en priskategori');
-    if (cat && (normal == null || normal < cat.value_kr)) problems.push(`en normal udsalgspris på mindst ${kr(cat.value_kr)}`);
+    if (cat && (normal == null || normal < Math.round(cat.value_kr * 1.25))) problems.push(`en normal udsalgspris på mindst ${kr(Math.round(cat.value_kr * 1.25))} inkl. moms`);
     if (stock < 1) problems.push('et lager på mindst 1');
     if (fd.get('wrapped') !== 'ja') problems.push('bekræftelse af gaveindpakning');
     if (kind === 'Mad og drikke' && fd.get('shelf') !== 'ja') problems.push('bekræftelse af holdbarhed');
@@ -179,13 +179,13 @@ export default async function ProductGuide({ params, searchParams }: { params: P
 
             <section className="section">
               <h2>3 · Priskategori</h2>
-              <div className="req">Vælg den kategori, der passer til varens normale udsalgspris i din butik. Medarbejderne ser ingen priser.</div>
+              <div className="req">Vælg den prisgruppe, der passer til varens normale udsalgspris i din butik (inkl. moms). Medarbejderne ser ingen priser.</div>
               <div className="grid-2">
                 {cats.map((c) => (
                   <label key={c.id} className="check card" style={{ padding: 12 }}>
                     <input type="radio" name="category" value={c.id} defaultChecked={p?.price_category_id === c.id} />
                     <span>
-                      <b>{c.name}</b> · {kr(c.value_kr)}
+                      <b>{kr(c.value_kr)}</b> ekskl. moms · {kr(Math.round(c.value_kr * 1.25))} inkl.
                     </span>
                   </label>
                 ))}
@@ -193,7 +193,7 @@ export default async function ProductGuide({ params, searchParams }: { params: P
               <div className="field">
                 <label htmlFor="normal_price">Normal udsalgspris i butikken (kr. inkl. moms)</label>
                 <input id="normal_price" name="normal_price" type="number" min={0} defaultValue={p?.normal_price_kr ?? ''} />
-                <span className="hint">Skal være mindst kategoriens beløb.</span>
+                <span className="hint">Skal være mindst kategoriens beløb inkl. moms.</span>
               </div>
             </section>
 

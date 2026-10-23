@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { PublicHeader } from '@/components/ui';
 import { kr } from '@/lib/format';
 import { categories } from '@/lib/gifts';
+import { incl } from '@/lib/purchase';
 
 export const metadata: Metadata = {
   title: 'Skatteregler for firmagaver 2026 – Gaver For Dig',
@@ -21,7 +22,7 @@ const EXAMPLES: [string, string, string, string][] = [
 const FAQ: [string, string][] = [
   [
     'Er gaverne fra Gaver For Dig skattefri?',
-    'Ja, når I holder jer inden for grænserne. Medarbejderen vælger én fysisk gave fra et udvalg af lokale varer, og gaven bliver leveret til arbejdspladsen. Der er ingen kontanter og intet gavekort, der kan bruges frit i en butik. Vælg en priskategori på højst 1.000 kr., så er julegaven skattefri, uanset hvad medarbejderen ellers har fået i årets løb.',
+    'Ja, når I holder jer inden for grænserne. Medarbejderen vælger én fysisk gave fra et udvalg af lokale varer, og gaven bliver leveret til jer eller til medarbejderens adresse. Der er ingen kontanter og intet gavekort, der kan bruges frit i en butik. Vælg et gavekort på højst 800 kr. ekskl. moms (1.000 kr. inkl. moms), så er julegaven skattefri, uanset hvad medarbejderen ellers har fået i årets løb.',
   ],
   [
     'Hvad sker der, hvis grænsen bliver overskredet?',
@@ -41,7 +42,7 @@ const FAQ: [string, string][] = [
   ],
   [
     'Kan virksomheden trække moms og udgift fra?',
-    'Der er ikke fradrag for moms på gaver til medarbejdere, uanset beløbet. Derfor viser vi alle priser inkl. moms. Selve udgiften kan virksomheden normalt trække fra som en driftsudgift.',
+    'Der er ikke fradrag for moms på gaver til medarbejdere, uanset beløbet. Grænserne gælder derfor beløbet inkl. moms, selvom vores priser står ekskl. moms. Selve udgiften kan virksomheden normalt trække fra som en driftsudgift.',
   ],
   [
     'Hvad skal vi gemme som dokumentation?',
@@ -143,21 +144,26 @@ export default async function TaxRules() {
         </section>
 
         <section className="stack-s">
-          <h2 style={{ fontSize: 22 }}>Sådan passer vores priskategorier til reglerne</h2>
+          <h2 style={{ fontSize: 22 }}>Sådan passer vores gavekort til reglerne</h2>
+          <p className="muted small">Vores priser er ekskl. moms, men skattegrænserne gælder beløbet inkl. moms.</p>
           <div className="tiles">
             {cats.map((c) => {
-              const jul = c.value_kr <= 1000;
+              const jul = incl(c.value_kr) <= 1000;
+              const alone = incl(c.value_kr) <= 1400;
               return (
                 <div key={c.id} className="card stack-s">
                   <div className="row between">
-                    <div className="eyebrow">{c.name}</div>
-                    <span className={`badge ${jul ? 'ok' : 'warn'}`}>{jul ? 'Skattefri julegave' : 'Kun hvis ingen andre gaver'}</span>
+                    <div className="eyebrow">Gavekort</div>
+                    <span className={`badge ${jul ? 'ok' : 'warn'}`}>{jul ? 'Skattefri julegave' : alone ? 'Kun hvis ingen andre gaver' : 'Skattepligtig'}</span>
                   </div>
                   <div style={{ fontSize: 28, fontWeight: 700 }}>{kr(c.value_kr)}</div>
+                  <div className="small muted">ekskl. moms · {kr(incl(c.value_kr))} inkl. moms</div>
                   <p className="small muted">
                     {jul
                       ? 'Holder sig inden for grænsen for skattefri julegaver.'
-                      : 'Over julegavegrænsen. Skattefri som eneste gave i året, så længe den samlede grænse ikke overskrides.'}
+                      : alone
+                        ? 'Over julegavegrænsen. Skattefri som eneste gave i året, så længe den samlede grænse på 1.400 kr. ikke overskrides.'
+                        : 'Over begge grænser. Medarbejderen beskattes af gaven.'}
                   </p>
                 </div>
               );
@@ -182,10 +188,10 @@ export default async function TaxRules() {
         <section className="dark-card row between" style={{ gap: 20 }}>
           <div className="stack-s" style={{ flex: '1 1 420px' }}>
             <h2 style={{ fontSize: 22 }}>Klar til en skattefri, lokal julegave?</h2>
-            <p className="muted">Vælg kategorien Julegave max, så kan medarbejderne vælge en gave til op til 1.000 kr. fra butikker i Vejen Kommune.</p>
+            <p className="muted">Vælg gavekortet til 800 kr. ekskl. moms – den højeste skattefri julegave – så vælger medarbejderne selv fra butikker i Vejen Kommune.</p>
           </div>
-          <Link href="/virksomhed/opret" className="btn light">
-            Bestil til jeres medarbejdere
+          <Link href="/bestil" className="btn light">
+            Bestil gavekort
           </Link>
         </section>
 

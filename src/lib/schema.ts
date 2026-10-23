@@ -163,7 +163,67 @@ create table if not exists events (
   detail text
 );
 
+-- Bestillinger fra virksomheder (kassen). Én bestilling kan have flere prisgrupper (gift_orders).
+create table if not exists purchases (
+  id serial primary key,
+  company_id integer not null references companies(id) on delete cascade,
+  status text not null default 'new',
+  delivery_mode text not null default 'company' check (delivery_mode in ('company','home')),
+  delivery_week text not null,
+  delivery_date date not null,
+  choose_deadline timestamptz not null,
+  wrapping boolean not null default false,
+  codes_delivery text not null default 'email' check (codes_delivery in ('email','file')),
+  payment text not null default 'faktura' check (payment in ('faktura','ean','kort')),
+  ean text,
+  po_number text,
+  cvr text,
+  company_name text not null,
+  billing_address text not null,
+  billing_zip text not null,
+  billing_city text not null,
+  billing_country text not null default 'Danmark',
+  billing_email text not null,
+  delivery_same boolean not null default true,
+  delivery_name text,
+  delivery_address text,
+  delivery_zip text,
+  delivery_city text,
+  delivery_att text,
+  contact_first text not null,
+  contact_last text not null,
+  contact_email text not null,
+  contact_phone text not null,
+  newsletter boolean not null default false,
+  quantity integer not null,
+  subtotal_ex integer not null,
+  delivery_fee_ex integer not null default 0,
+  wrapping_fee_ex integer not null default 0,
+  moms integer not null,
+  total_inc integer not null,
+  invoiced_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table gift_orders add column if not exists purchase_id integer references purchases(id) on delete cascade;
+alter table gift_orders add column if not exists quantity integer;
+alter table gift_orders add column if not exists choose_deadline timestamptz;
+alter table gift_orders add column if not exists delivery_date date;
+alter table gift_orders add column if not exists delivery_mode text not null default 'company';
+alter table gift_orders add column if not exists wrapping boolean not null default false;
+
+alter table recipients alter column name drop not null;
+alter table recipients alter column email drop not null;
+alter table recipients add column if not exists code text unique;
+alter table recipients add column if not exists address text;
+alter table recipients add column if not exists zip text;
+alter table recipients add column if not exists city text;
+alter table recipients add column if not exists phone text;
+
+alter table handoffs add column if not exists dropoff_deadline timestamptz;
+
 create index if not exists recipients_order_idx on recipients(order_id);
+create index if not exists gift_orders_purchase_idx on gift_orders(purchase_id);
 create index if not exists recipients_product_idx on recipients(chosen_product_id);
 create index if not exists products_shop_idx on products(shop_id);
 `;

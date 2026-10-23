@@ -1,13 +1,57 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge, Notice, ProductImage, TopBar } from '@/components/ui';
-import { currentRecipient } from '@/lib/auth';
+import { cookies } from 'next/headers';
+import { currentRecipient, RECIPIENT_COOKIE_NAME } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
-import { dato, KINDS } from '@/lib/format';
+import { datoTid, KINDS, str } from '@/lib/format';
+import { normalizeCode } from '@/lib/purchase';
 import { getOrder, getProduct, giftsFor, type Season } from '@/lib/gifts';
 import { sendMail } from '@/lib/mail';
 
 const OPEN = ['confirmed', 'invited'];
+
+async function deadlineFor(o: { choose_deadline: Date | null; season_id: number }) {
+  if (o.choose_deadline) return new Date(o.choose_deadline);
+  const s = await one<Season>('select * from seasons where id = $1', [o.season_id]);
+  return s?.choose_deadline ? new Date(s.choose_deadline) : null;
+}
+
+async function redeem(fd: FormData) {
+  'use server';
+  const code = normalizeCode(str(fd, 'code'));
+  const r = await one<{ id: number; token: string }>('select id, token from recipients where code = $1', [code]);
+  if (!r) redirect('/gave?m=' + encodeURIComponent('!Koden findes ikke. Tjek at du har skrevet den rigtigt – fx ABCD-EFGH.'));
+  await q('update recipients set opened_at = coalesce(opened_at, now()) where id = $1', [r.id]);
+  const jar = await cookies();
+  jar.set(RECIPIENT_COOKIE_NAME, r.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 90, path: '/' });
+  redirect('/gave');
+}
+
+async function saveInfo(fd: FormData) {
+  'use server';
+  const r = await currentRecipient();
+  if (!r) redirect('/gave');
+  const o = await getOrder(r.order_id);
+  if (!o) redirect('/gave');
+  const name = str(fd, 'name');
+  const email = str(fd, 'email').toLowerCase();
+  if (!name) redirect('/gave?ret=1&m=' + encodeURIComponent('!Skriv dit navn'));
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) redirect('/gave?ret=1&m=' + encodeURIComponent('!E-mailen er ikke gyldig'));
+  if (o.delivery_mode === 'home' && (!str(fd, 'address') || !str(fd, 'zip') || !str(fd, 'city'))) {
+    redirect('/gave?ret=1&m=' + encodeURIComponent('!Skriv den adresse, gaven skal sendes til'));
+  }
+  await q('update recipients set name = $1, email = coalesce(nullif($2, \'\'), email), address = $3, zip = $4, city = $5, phone = $6 where id = $7', [
+    name,
+    email,
+    str(fd, 'address') || null,
+    str(fd, 'zip') || null,
+    str(fd, 'city') || null,
+    str(fd, 'phone') || null,
+    r.id,
+  ]);
+  redirect('/gave');
+}
 
 async function choose(fd: FormData) {
   'use server';
@@ -15,13 +59,14 @@ async function choose(fd: FormData) {
   if (!r) redirect('/gave');
   const productId = Number(fd.get('product'));
   const o = await getOrder(r.order_id);
-  const season = o && (await one<Season>('select * from seasons where id = $1', [o.season_id]));
-  if (!o || !OPEN.includes(o.status) || (season?.choose_deadline && new Date(season.choose_deadline) < new Date())) {
+  const deadline = o ? await deadlineFor(o) : null;
+  if (!o || !OPEN.includes(o.status) || (deadline && deadline < new Date())) {
     redirect('/gave?m=' + encodeURIComponent('!Vælgeperioden er slut'));
   }
   const allowed = await giftsFor(o.price_category_id, r.chosen_product_id);
   const p = allowed.find((x) => x.id === productId);
   if (!p) redirect('/gave?m=' + encodeURIComponent('!Gaven er desværre ikke længere tilgængelig'));
+  if (!r.name || (o.delivery_mode === 'home' && !r.address)) redirect('/gave?ret=1&m=' + encodeURIComponent('!Udfyld dine oplysninger først'));
   if (p.alcohol && !r.age_confirmed && fd.get('age') !== 'ja') {
     redirect('/gave?m=' + encodeURIComponent('!Bekræft at du er fyldt 18 år for at vælge en gave med alkohol'));
   }
@@ -31,15 +76,17 @@ async function choose(fd: FormData) {
     r.id,
   ]);
   await logEvent(`modtager:${r.id}`, 'recipient', r.id, 'gave valgt', `${p.name} (${p.shop_name})`);
-  await sendMail(
-    r.email,
-    'Din gave er valgt',
-    `Hej ${r.name}\n\nTak! Du har valgt: ${p.name} fra ${p.shop_name}.\nGaven pakkes med dit navn og leveres til din arbejdsplads.\n\nDu kan ændre dit valg frem til ${dato(season?.choose_deadline ?? null)} via linket i din invitation.\n\nVenlig hilsen\nGaver For Dig`,
-  );
+  if (r.email) {
+    await sendMail(
+      r.email,
+      'Din gave er valgt',
+      `Hej ${r.name}\n\nTak! Du har valgt: ${p.name} fra ${p.shop_name}.\n${o.delivery_mode === 'home' ? `Gaven sendes til ${r.address}, ${r.zip} ${r.city}.` : 'Gaven pakkes med dit navn og leveres til din arbejdsplads.'}\n\nDu kan ændre dit valg frem til ${datoTid(deadline)} med din gavekode ${r.code ?? ''}.\n\nVenlig hilsen\nGaver For Dig`,
+    );
+  }
   redirect('/gave?m=' + encodeURIComponent(`Du har valgt ${p.name}. Du får en bekræftelse på mail.`));
 }
 
-export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string }> }) {
+export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string; ret?: string }> }) {
   const sp = await searchParams;
   const r = await currentRecipient();
   if (!r) {
@@ -50,9 +97,28 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           <div className="card stack-s" style={{ maxWidth: 560, margin: '40px auto' }}>
             <h1 style={{ fontSize: 28 }}>Vælg din gave</h1>
             {sp.ugyldig && <div className="alert bad">Linket er ikke gyldigt. Tjek at du har brugt hele linket fra mailen.</div>}
-            <p className="muted">Brug det personlige link i den mail, du har fået fra din arbejdsplads. Så kommer du direkte ind i din gaveshop.</p>
+            <Notice msg={sp.m} />
+            <p className="muted">Skriv den gavekode, du har fået fra din arbejdsplads. Har du fået et personligt link på mail, kan du også bare klikke på det.</p>
+            <form action={redeem} className="form">
+              <div className="field">
+                <label htmlFor="code">Gavekode</label>
+                <input
+                  id="code"
+                  name="code"
+                  type="text"
+                  required
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  placeholder="ABCD-EFGH"
+                  style={{ fontSize: 22, letterSpacing: '.08em', textAlign: 'center', fontFamily: 'ui-monospace, monospace' }}
+                />
+              </div>
+              <button className="btn block" type="submit">
+                Gå til gaveshoppen
+              </button>
+            </form>
             <p className="small muted">
-              Kan du ikke finde mailen? Kontakt den, der står for gaverne hos jer, eller skriv til os. <Link href="/">Til forsiden</Link>
+              Kan du ikke finde koden? Kontakt den, der står for gaverne hos jer. <Link href="/">Til forsiden</Link>
             </p>
           </div>
         </main>
@@ -61,14 +127,15 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
   }
 
   const o = (await getOrder(r.order_id))!;
-  const season = await one<Season>('select * from seasons where id = $1', [o.season_id]);
-  const open = OPEN.includes(o.status) && !(season?.choose_deadline && new Date(season.choose_deadline) < new Date());
+  const deadline = await deadlineFor(o);
+  const open = OPEN.includes(o.status) && !(deadline && deadline < new Date());
+  const needInfo = open && (!r.name || (o.delivery_mode === 'home' && !r.address) || sp.ret === '1');
   const all = await giftsFor(o.price_category_id, r.chosen_product_id);
   const kind = sp.k && (KINDS as readonly string[]).includes(sp.k) ? sp.k : 'Alle';
   const shown = kind === 'Alle' ? all : all.filter((p) => p.kind === kind);
   const kindsInUse = KINDS.filter((k) => all.some((p) => p.kind === k));
   const chosen = r.chosen_product_id ? await getProduct(r.chosen_product_id) : undefined;
-  const firstName = r.name.split(' ')[0];
+  const firstName = r.name?.split(' ')[0] ?? '';
 
   return (
     <>
@@ -88,14 +155,17 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
         <section className="row between end" style={{ gap: 24 }}>
           <div className="stack-s" style={{ flex: '1 1 520px' }}>
             <div className="eyebrow">{o.title} fra {o.company_name}</div>
-            <h1>{open ? `Hej ${firstName}. Vælg din gave.` : `Hej ${firstName}.`}</h1>
+            <h1>{needInfo ? `Glædelig jul${firstName ? `, ${firstName}` : ''}!` : open ? `Hej ${firstName}. Vælg din gave.` : `Hej ${firstName}.`}</h1>
             {o.greeting && <p style={{ fontSize: 17, maxWidth: 680 }}>{o.greeting}</p>}
-            <p className="muted">Alle gaver kommer fra butikker i Vejen Kommune. Din gave pakkes med dit navn og leveres til din arbejdsplads.</p>
+            <p className="muted">
+              Alle gaver kommer fra butikker i Vejen Kommune.{' '}
+              {o.delivery_mode === 'home' ? 'Din gave sendes til den adresse, du skriver.' : 'Din gave pakkes med dit navn og leveres til din arbejdsplads.'}
+            </p>
           </div>
-          {season?.choose_deadline && (
+          {deadline && (
             <div className="card" style={{ minWidth: 220 }}>
               <div className="eyebrow">{open ? 'Vælg senest' : 'Vælgefristen var'}</div>
-              <div style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>{dato(season.choose_deadline)}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>{datoTid(deadline)}</div>
               {open && <div className="small muted">Du kan ændre dit valg indtil da</div>}
             </div>
           )}
@@ -103,7 +173,56 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
 
         <Notice msg={sp.m} />
 
-        {chosen && (
+        {needInfo && (
+          <form action={saveInfo} className="card form" style={{ maxWidth: 640 }}>
+            <h2>{o.delivery_mode === 'home' ? 'Hvem er du, og hvor skal gaven sendes hen?' : 'Hvem er du?'}</h2>
+            <p className="hint">{o.delivery_mode === 'home' ? 'Vi bruger adressen til at sende din gave.' : 'Vi skriver dit navn på gaven, så den kommer frem til dig.'}</p>
+            <div className="grid-2">
+              <div className="field">
+                <label htmlFor="name">Fulde navn *</label>
+                <input id="name" name="name" type="text" defaultValue={r.name ?? ''} autoComplete="name" required />
+              </div>
+              <div className="field">
+                <label htmlFor="email">E-mail (til kvittering)</label>
+                <input id="email" name="email" type="email" defaultValue={r.email ?? ''} autoComplete="email" />
+              </div>
+              {o.delivery_mode === 'home' && (
+                <>
+                  <div className="field" style={{ gridColumn: '1 / -1' }}>
+                    <label htmlFor="address">Adresse *</label>
+                    <input id="address" name="address" type="text" defaultValue={r.address ?? ''} autoComplete="street-address" required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="zip">Postnr. *</label>
+                    <input id="zip" name="zip" type="text" inputMode="numeric" defaultValue={r.zip ?? ''} autoComplete="postal-code" required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="city">By *</label>
+                    <input id="city" name="city" type="text" defaultValue={r.city ?? ''} autoComplete="address-level2" required />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="phone">Mobilnummer (til fragtfirmaet)</label>
+                    <input id="phone" name="phone" type="tel" defaultValue={r.phone ?? ''} autoComplete="tel" />
+                  </div>
+                </>
+              )}
+            </div>
+            <div>
+              <button className="btn" type="submit">
+                Fortsæt til gaverne
+              </button>
+            </div>
+          </form>
+        )}
+
+        {!needInfo && open && r.name && (
+          <p className="small muted">
+            {r.name}
+            {o.delivery_mode === 'home' && r.address ? ` · ${r.address}, ${r.zip} ${r.city}` : ''} · <Link href="/gave?ret=1">Ret mine oplysninger</Link>
+          </p>
+        )}
+
+        {chosen && !needInfo && (
           <div className="dark-card row between">
             <div>
               <div className="small muted">{r.is_default ? 'Du fik tildelt standardgaven' : 'Dit valg'}</div>
@@ -114,7 +233,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           </div>
         )}
 
-        {open ? (
+        {needInfo ? null : open ? (
           <>
             <nav className="pills" aria-label="Filtrér gaver">
               {['Alle', ...kindsInUse].map((k) => (
