@@ -5,6 +5,8 @@ import { categories, getSetting } from '@/lib/gifts';
 import { kr } from '@/lib/format';
 import { deliveryWeeks, incl, shopSettings } from '@/lib/purchase';
 
+const TOWNS = ['Brørup', 'Vejen', 'Rødding', 'Holsted', 'Askov', 'Lintrup', 'Gesten', 'Jels', 'Skodborg', 'Bække', 'Hovborg', 'Føvling', 'Lindknud', 'Glejbjerg', 'Andst', 'Malt'];
+
 export default async function Home() {
   const [cats, s, hero, img1, img2, img3, title, intro] = await Promise.all([
     categories(),
@@ -65,7 +67,7 @@ export default async function Home() {
             <div className="hero-fallback">
               <span className="eyebrow">Gaver fra</span>
               <div className="towns">
-                {['Brørup', 'Vejen', 'Rødding', 'Holsted', 'Askov', 'Lintrup', 'Gesten', 'Jels', 'Skodborg', 'Bække'].map((t) => (
+                {TOWNS.slice(0, 10).map((t) => (
                   <span key={t}>{t}</span>
                 ))}
               </div>
@@ -120,6 +122,13 @@ export default async function Home() {
             <div className="band-text">
               <h2>{bandTitle || 'Gaver med lokal sjæl'}</h2>
               <p>{bandText || 'Hver gave kommer fra en butik i Vejen Kommune. Når I giver en gave herfra, bliver pengene i lokalsamfundet.'}</p>
+            </div>
+            <div className="town-flow" aria-hidden="true">
+              <div className="town-track">
+                {[...TOWNS, ...TOWNS].map((t, i) => (
+                  <span key={i}>{t}</span>
+                ))}
+              </div>
             </div>
           </section>
         )}

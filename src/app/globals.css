@@ -340,6 +340,15 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .band-text h2 { color: #fff; font-size: clamp(24px, 3vw, 34px); }
 .band-text p { margin: 0; font-size: 16px; opacity: .92; }
 
+.town-flow { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; overflow: hidden; padding: 14px 0 18px; background: linear-gradient(0deg, rgba(20,30,24,.6), rgba(20,30,24,0)); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.town-track { display: flex; width: max-content; animation: town-flow 60s linear infinite; }
+.town-track span { font-size: clamp(20px, 2.6vw, 30px); font-weight: 700; color: rgba(255,255,255,.88); white-space: nowrap; padding: 0 22px; position: relative; }
+.town-track span:nth-child(3n+2) { color: var(--gold); }
+.town-track span::after { content: '·'; position: absolute; right: -4px; color: rgba(255,255,255,.45); }
+.band:hover .town-track { animation-play-state: paused; }
+@keyframes town-flow { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .town-track { animation: none; } }
+
 /* Billedguide */
 .guide-specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
 .guide-specs b { font-size: 18px; }
