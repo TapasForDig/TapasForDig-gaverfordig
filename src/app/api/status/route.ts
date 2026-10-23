@@ -1,4 +1,4 @@
-import { one } from '@/lib/db';
+import { one, q } from '@/lib/db';
 
 // Fejlsøgning af opsætningen. Viser kun ja/nej – aldrig værdier eller nøgler.
 export async function GET() {
@@ -7,9 +7,14 @@ export async function GET() {
   let adminExists = false;
   let admins = 0;
   let error: string | null = null;
+  let produkter: Record<string, number> = {};
+  let billeder_lokale = 0;
   try {
     admins = (await one<{ n: number }>(`select count(*)::int as n from users where role = 'admin'`))?.n ?? 0;
     db = true;
+    const rows = await q<{ status: string; n: number }>('select status, count(*)::int as n from products group by status');
+    produkter = Object.fromEntries(rows.map((r) => [r.status, r.n]));
+    billeder_lokale = (await one<{ n: number }>(`select count(*)::int as n from products where images like '%/api/files/%'`))?.n ?? 0;
     if (email) adminExists = !!(await one('select 1 from users where email = $1', [email]));
   } catch (e) {
     error = (e as Error).message.slice(0, 120);
@@ -31,5 +36,7 @@ export async function GET() {
     supabase_key_sat: !!process.env.SUPABASE_SERVICE_KEY,
     no_demo: process.env.NO_DEMO === '1',
     app_url_sat: !!process.env.APP_URL,
+    produkter_pr_status: produkter,
+    produkter_med_lokale_billeder: billeder_lokale,
   });
 }

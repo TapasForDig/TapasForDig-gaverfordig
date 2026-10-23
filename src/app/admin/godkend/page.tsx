@@ -3,7 +3,8 @@ import { Notice, ProductImage, Shell } from '@/components/ui';
 import { requireRole } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { appUrl, images, int, kr, str } from '@/lib/format';
-import { categories, getProduct, productsByStatus } from '@/lib/gifts';
+import { categories, getProduct, productsByStatus, type Product } from '@/lib/gifts';
+import Link from 'next/link';
 import { sendMail } from '@/lib/mail';
 import { adminNav } from '../nav';
 import { FoodInfo } from '@/components/FoodInfo';
@@ -59,7 +60,59 @@ export default async function Approve({ searchParams }: { searchParams: Promise<
   const shops = await q<{ id: number; name: string; cvr: string | null; town: string | null; contact_name: string | null; email: string | null; story: string | null }>(
     `select * from shops where status = 'pending' order by created_at`,
   );
-  const [products, cats] = await Promise.all([productsByStatus('pending'), categories()]);
+  const [products, drafts, cats] = await Promise.all([productsByStatus('pending'), productsByStatus('draft'), categories()]);
+  const missing = (p: Product) =>
+    [
+      images(p.images).length === 0 && 'billede',
+      p.description.length < 120 && 'beskrivelse',
+      !p.kind && 'kategori',
+      !p.price_category_id && 'prisgruppe',
+      p.stock < 1 && 'antal',
+    ].filter(Boolean) as string[];
+  const card = (p: Product, draft: boolean) => {
+    const cat = cats.find((c) => c.id === p.price_category_id);
+    const imgs = images(p.images);
+    const miss = missing(p);
+    return (
+      <form key={p.id} action={decideProduct} className="product">
+        <input type="hidden" name="product" value={p.id} />
+        <ProductImage json={p.images} alt={p.name} />
+        <div className="body" style={{ textAlign: 'left' }}>
+          <div className="eyebrow">{p.shop_name}</div>
+          <h3>{p.name}</h3>
+          {draft && (
+            <div className={`alert ${miss.length ? 'warn' : ''} small`}>
+              Kladde – ikke sendt til godkendelse.{miss.length ? ` Mangler: ${miss.join(', ')}.` : ' Alt er udfyldt.'}
+            </div>
+          )}
+          <p className="desc">{p.description}</p>
+          {p.kind === 'Mad og drikke' && p.ingredients && <FoodInfo ingredients={p.ingredients} netContent={p.net_content} contact={{ phone: '–', email: '–' }} />}
+          <div className="small">
+            {p.kind || 'ingen kategori'} · {cat ? `${kr(cat.value_kr)} ekskl. moms` : 'ingen prisgruppe'} · normalpris {kr(p.normal_price_kr)} · antal {p.stock}
+            {p.alcohol ? ' · alkohol' : ''} · {imgs.length} billeder
+          </div>
+          <div className="field">
+            <label htmlFor={`cost-${p.id}`} className="small">
+              Indkøbspris til butikken (kr., valgfri)
+            </label>
+            <input id={`cost-${p.id}`} name="cost" type="number" min={0} defaultValue={p.cost_kr ?? ''} />
+          </div>
+          <textarea name="note" placeholder="Hvad skal rettes? (ved afvisning)" aria-label="Besked til butikken" style={{ minHeight: 70 }} />
+          <div className="row">
+            <button className="btn small" name="decision" value="approve" disabled={draft && !cat}>
+              {draft ? 'Godkend alligevel' : 'Godkend'}
+            </button>
+            <button className="btn small danger" name="decision" value="reject">
+              Send retur
+            </button>
+            <Link className="small" href={`/butik/produkt/${p.id}?butik=${p.shop_id}`}>
+              Ret selv
+            </Link>
+          </div>
+        </div>
+      </form>
+    );
+  };
   return (
     <Shell area="Admin" nav={adminNav} active="/admin/godkend">
       <div className="stack">
@@ -89,47 +142,17 @@ export default async function Approve({ searchParams }: { searchParams: Promise<
           ))}
         </section>
         <section className="stack-s">
-          <h2>Produkter ({products.length})</h2>
+          <h2>Produkter til godkendelse ({products.length})</h2>
           {products.length === 0 && <p className="muted small">Ingen produkter venter.</p>}
-          <div className="products">
-            {products.map((p) => {
-              const cat = cats.find((c) => c.id === p.price_category_id);
-              const imgs = images(p.images);
-              return (
-                <form key={p.id} action={decideProduct} className="product">
-                  <input type="hidden" name="product" value={p.id} />
-                  <ProductImage json={p.images} alt={p.name} />
-                  <div className="body" style={{ textAlign: 'left' }}>
-                    <div className="eyebrow">{p.shop_name}</div>
-                    <h3>{p.name}</h3>
-                    <p className="desc">{p.description}</p>
-                    {p.kind === 'Mad og drikke' && p.ingredients && (
-                      <FoodInfo ingredients={p.ingredients} netContent={p.net_content} contact={{ phone: '–', email: '–' }} />
-                    )}
-                    <div className="small">
-                      {p.kind} · {cat ? `${cat.name} (${kr(cat.value_kr)})` : 'ingen kategori'} · normalpris {kr(p.normal_price_kr)} · lager {p.stock}
-                      {p.alcohol ? ' · alkohol' : ''} · {imgs.length} billeder
-                    </div>
-                    <div className="field">
-                      <label htmlFor={`cost-${p.id}`} className="small">
-                        Indkøbspris til butikken (kr., valgfri)
-                      </label>
-                      <input id={`cost-${p.id}`} name="cost" type="number" min={0} defaultValue={p.cost_kr ?? ''} />
-                    </div>
-                    <textarea name="note" placeholder="Hvad skal rettes? (ved afvisning)" aria-label="Besked til butikken" style={{ minHeight: 70 }} />
-                    <div className="row">
-                      <button className="btn small" name="decision" value="approve">
-                        Godkend
-                      </button>
-                      <button className="btn small danger" name="decision" value="reject">
-                        Send retur
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              );
-            })}
-          </div>
+          <div className="products">{products.map((p) => card(p, false))}</div>
+        </section>
+        <section className="stack-s">
+          <h2>Kladder hos butikkerne ({drafts.length})</h2>
+          <p className="small muted">
+            Produkter, som butikken har gemt, men ikke sendt til godkendelse – typisk fordi der manglede noget. Du kan godkende dem direkte eller rette dem selv.
+          </p>
+          {drafts.length === 0 && <p className="muted small">Ingen kladder.</p>}
+          <div className="products">{drafts.map((p) => card(p, true))}</div>
         </section>
       </div>
     </Shell>
