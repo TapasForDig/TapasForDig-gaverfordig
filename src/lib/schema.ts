@@ -137,6 +137,13 @@ create table if not exists recipients (
   created_at timestamptz not null default now()
 );
 
+create table if not exists password_resets (
+  token text primary key,
+  user_id integer not null references users(id) on delete cascade,
+  expires_at timestamptz not null,
+  used_at timestamptz
+);
+
 create table if not exists outbox (
   id serial primary key,
   to_email text not null,
