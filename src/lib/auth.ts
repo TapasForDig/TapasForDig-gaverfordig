@@ -100,6 +100,6 @@ export async function currentRecipient(): Promise<Recipient | null> {
   const jar = await cookies();
   const t = jar.get(RECIPIENT_COOKIE)?.value;
   if (!t) return null;
-  const r = await one<Recipient>('select * from recipients where token = $1', [t]);
+  const r = await one<Recipient>(`select * from recipients where token = $1 and anonymized_at is null and not exists (select 1 from gift_orders ho join purchases hp on hp.id = ho.purchase_id where ho.id = recipients.order_id and hp.hold)`, [t]);
   return r ?? null;
 }

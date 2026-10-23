@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import QRCode from 'qrcode';
 import { PrintButton } from '@/components/PrintButton';
 import { appUrl, datoTid } from '@/lib/format';
@@ -8,7 +9,8 @@ import { ownPurchase } from '../../access';
 // Printbare gavekort – ét pr. medarbejder, med kode og QR til det personlige link
 export default async function PrintCodes({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { p } = await ownPurchase(Number(id));
+  const { u, p } = await ownPurchase(Number(id));
+  if (p.hold && u.role !== 'admin') redirect(`/virksomhed/bestilling/${p.id}`);
   const codes = await purchaseCodes(p.id);
   const qrs = await Promise.all(codes.map((c) => QRCode.toDataURL(codeLink(c.token), { margin: 1, width: 160 })));
   return (

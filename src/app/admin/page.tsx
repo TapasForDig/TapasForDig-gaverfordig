@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge, Notice, Shell, Stat } from '@/components/ui';
 import { requireRole } from '@/lib/auth';
+import { cleanupIfDue } from '@/lib/retention';
 import { q } from '@/lib/db';
 import { dato, datoTid, kr } from '@/lib/format';
 import { activeSeason, closeChoosing, ORDER_STATUS } from '@/lib/gifts';
@@ -27,6 +28,7 @@ async function close(fd: FormData) {
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
   await requireRole('admin');
   const sp = await searchParams;
+  await cleanupIfDue();
   const season = await activeSeason();
   const sid = season?.id ?? 0;
   const [totals] = await q<{ orders: number; recipients: number; chosen: number; revenue: number; companies: number }>(

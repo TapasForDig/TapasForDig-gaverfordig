@@ -33,6 +33,7 @@ const PRICE_GROUPS: [number, string][] = [
 
 const DEFAULT_SETTINGS: [string, string][] = [
   ['indkoebsrabat_pct', ''],
+  ['forudbetaling_graense_kr', '10000'],
   ['logistik_adresse', '[Adresse på logistikcentralen], Brørup'],
   ['gebyr_hjemlevering_kr', '75'],
   ['indpakning_kr', '30'],

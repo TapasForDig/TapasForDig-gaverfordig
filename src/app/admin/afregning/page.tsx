@@ -5,7 +5,7 @@ import { requireRole } from '@/lib/auth';
 import { logEvent, q } from '@/lib/db';
 import { dato, kr } from '@/lib/format';
 import { activeSeason, getSetting } from '@/lib/gifts';
-import { weekLabel } from '@/lib/purchase';
+import { releaseCodes, weekLabel } from '@/lib/purchase';
 import { adminNav } from '../nav';
 
 async function markInvoiced(fd: FormData) {
@@ -16,6 +16,39 @@ async function markInvoiced(fd: FormData) {
   await q(`update purchases set invoiced_at = ${undo ? 'null' : 'now()'} where id = $1`, [id]);
   await logEvent(u.email, 'purchase', id, undo ? 'faktura fortrudt' : 'faktureret');
   redirect('/admin/afregning?m=' + encodeURIComponent(undo ? `Ordre ${id} er markeret som ikke faktureret` : `Ordre ${id} er markeret som faktureret`));
+}
+
+async function payment(fd: FormData) {
+  'use server';
+  const u = await requireRole('admin');
+  const id = Number(fd.get('id'));
+  const act = String(fd.get('act'));
+  let m = '';
+  if (act === 'paid') {
+    const p = await q<{ hold: boolean }>('update purchases set paid_at = now() where id = $1 returning hold', [id]);
+    await logEvent(u.email, 'purchase', id, 'betalt');
+    if (p[0]?.hold) {
+      const n = await releaseCodes(id, u.email);
+      m = `Ordre ${id} er betalt, og koderne er sendt${n ? ` (${n})` : ''}`;
+    } else m = `Ordre ${id} er markeret som betalt`;
+  } else if (act === 'unpaid') {
+    await q('update purchases set paid_at = null where id = $1', [id]);
+    await logEvent(u.email, 'purchase', id, 'betaling fortrudt');
+    m = `Ordre ${id} er markeret som ikke betalt`;
+  } else if (act === 'hold') {
+    const sent = await q<{ n: number }>(
+      `select count(*)::int as n from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = $1 and r.invited_at is not null`,
+      [id],
+    );
+    if (sent[0].n > 0) redirect('/admin/afregning?m=' + encodeURIComponent(`!Koderne til ordre ${id} er allerede sendt og kan ikke holdes tilbage`));
+    await q('update purchases set hold = true where id = $1', [id]);
+    await logEvent(u.email, 'purchase', id, 'afventer betaling (manuelt)');
+    m = `Ordre ${id} afventer betaling – koderne holdes tilbage`;
+  } else if (act === 'release') {
+    const n = await releaseCodes(id, u.email);
+    m = `Koderne til ordre ${id} er sendt uden betaling${n ? ` (${n})` : ''}`;
+  }
+  redirect('/admin/afregning?m=' + encodeURIComponent(m));
 }
 
 interface Inv {
@@ -34,6 +67,9 @@ interface Inv {
   total_inc: number;
   delivery_week: string;
   invoiced_at: Date | null;
+  hold: boolean;
+  paid_at: Date | null;
+  sent: number;
   created_at: Date;
   lines: string;
 }
@@ -45,8 +81,9 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
   const rabat = await getSetting('indkoebsrabat_pct');
   const invoices = await q<Inv>(
     `select p.*, (select string_agg(o.quantity || ' × ' || pc.value_kr || ' kr.', ', ' order by pc.value_kr)
-                    from gift_orders o join price_categories pc on pc.id = o.price_category_id where o.purchase_id = p.id) as lines
-       from purchases p order by p.invoiced_at is not null, p.created_at desc`,
+                    from gift_orders o join price_categories pc on pc.id = o.price_category_id where o.purchase_id = p.id) as lines,
+            (select count(*)::int from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = p.id and r.invited_at is not null) as sent
+       from purchases p order by p.hold desc, p.paid_at is not null, p.invoiced_at is not null, p.created_at desc`,
   );
   const settle = await q<{ shop: string; cvr: string | null; product: string; n: number; received: number; cost_kr: number | null; value_kr: number | null }>(
     `select s.name as shop, s.cvr, p.name as product, count(*)::int as n, count(r.received_at)::int as received, p.cost_kr, pc.value_kr
@@ -59,6 +96,9 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
   const unit = (r: (typeof settle)[number]) => r.cost_kr ?? (pct != null && r.value_kr != null ? Math.round(r.value_kr * (1 - pct / 100)) : null);
   const shops = [...new Set(settle.map((s) => s.shop))];
   const pending = invoices.filter((i) => !i.invoiced_at);
+  const held = invoices.filter((i) => i.hold);
+  const unpaid = invoices.filter((i) => i.invoiced_at && !i.paid_at);
+  const limit = await getSetting('forudbetaling_graense_kr');
   const costTotal = settle.reduce((s, r) => s + (unit(r) ?? 0) * r.received, 0);
 
   return (
@@ -69,7 +109,19 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
           <h1>Fakturering og afregning</h1>
         </div>
         <Notice msg={sp.m} />
-        <p className="muted">Opret fakturaerne i e-conomic ud fra listen, og markér dem som faktureret her. Beløb er ekskl. moms, medmindre andet står.</p>
+        <p className="muted">Opret fakturaerne i e-conomic ud fra listen, og markér dem som faktureret og betalt her. Beløb er ekskl. moms, medmindre andet står.</p>
+        {held.length > 0 && (
+          <div className="alert">
+            <b>{held.length} {held.length === 1 ? 'bestilling afventer' : 'bestillinger afventer'} betaling.</b> Koderne er holdt tilbage. Når betalingen er registreret, trykker du
+            &quot;Markér betalt&quot;, så sendes koderne automatisk.
+          </div>
+        )}
+        <p className="small muted">
+          {Number(limit) > 0
+            ? `Nye kunder betaler forud ved bestillinger på ${kr(Number(limit))} inkl. moms eller mere. Grænsen ændres under Sæson og indstillinger.`
+            : 'Forudbetaling for nye kunder er slået fra. Det slås til under Sæson og indstillinger.'}{' '}
+          {unpaid.length > 0 && `${unpaid.length} fakturerede ordrer er ikke markeret som betalt (${kr(unpaid.reduce((s, i) => s + i.total_inc, 0))}).`}
+        </p>
 
         <section className="card flush">
           <div className="card-head">
@@ -87,7 +139,8 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
                   <th className="num">Gebyrer</th>
                   <th className="num">Moms</th>
                   <th className="num">I alt inkl.</th>
-                  <th>Status</th>
+                  <th>Faktura</th>
+                  <th>Betaling</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,11 +189,42 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
                         )}
                       </form>
                     </td>
+                    <td>
+                      <form action={payment} className="stack-s">
+                        <input type="hidden" name="id" value={i.id} />
+                        {i.paid_at ? (
+                          <>
+                            <Badge tone="ok">Betalt {dato(i.paid_at)}</Badge>
+                            <button className="linkbtn small" name="act" value="unpaid">
+                              Fortryd
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            {i.hold ? <Badge tone="bad">Afventer betaling</Badge> : <Badge>Ikke betalt</Badge>}
+                            <button className="btn small" name="act" value="paid">
+                              {i.hold ? 'Markér betalt og send koder' : 'Markér betalt'}
+                            </button>
+                            {i.hold ? (
+                              <button className="linkbtn small" name="act" value="release">
+                                Send koder uden betaling
+                              </button>
+                            ) : (
+                              i.sent === 0 && (
+                                <button className="linkbtn small" name="act" value="hold">
+                                  Hold koderne tilbage
+                                </button>
+                              )
+                            )}
+                          </>
+                        )}
+                      </form>
+                    </td>
                   </tr>
                 ))}
                 {invoices.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="muted">
+                    <td colSpan={7} className="muted">
                       Ingen bestillinger endnu.
                     </td>
                   </tr>

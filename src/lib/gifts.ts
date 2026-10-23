@@ -221,6 +221,7 @@ export async function closeChoosing(seasonId: number, actor: string, force = fal
   const due = await q<{ id: number }>(
     `select o.id from gift_orders o join seasons s on s.id = o.season_id
       where o.season_id = $1 and o.status in ('confirmed','invited')
+        and not exists (select 1 from purchases hp where hp.id = o.purchase_id and hp.hold)
         and ($2 or coalesce(o.choose_deadline, s.choose_deadline) < now())`,
     [seasonId, force],
   );

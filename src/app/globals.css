@@ -385,3 +385,12 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .dolist li::before { position: absolute; left: 0; top: 0; font-weight: 700; }
 .dolist.ok li::before { content: '✓'; color: var(--ok); }
 .dolist.bad li::before { content: '✕'; color: var(--bad); }
+
+/* Footer og juridiske sider */
+.site-footer { margin-top: 48px; background: var(--green-dark); color: rgba(255,255,255,.75); font-size: 13px; }
+.footer-inner { max-width: 1180px; margin: 0 auto; padding: 20px 24px; display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; align-items: center; }
+.site-footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.site-footer a { color: #fff; text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.legal p, .legal li { font-size: 15px; line-height: 1.65; color: var(--ink); }
+.legal ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }

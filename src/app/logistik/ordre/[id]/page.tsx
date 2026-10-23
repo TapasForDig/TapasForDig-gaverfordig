@@ -47,6 +47,7 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
   const { id } = await params;
   const sp = await searchParams;
   const o = await getOrder(Number(id));
+  const pay = o?.purchase_id ? (await q<{ hold: boolean; paid_at: Date | null }>('select hold, paid_at from purchases where id = $1', [o.purchase_id]))[0] : null;
   if (!o) notFound();
   const items = await q<Item>(
     `select r.id, r.name, r.code, r.address, r.zip, r.city, r.department, p.name as product, s.name as shop, r.received_at
@@ -116,6 +117,7 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
           <Badge tone={o.status === 'delivered' ? 'ok' : undefined}>{ORDER_STATUS[o.status]}</Badge>
         </div>
         <div className="row" style={{ gap: 8 }}>
+          {pay?.hold && <Badge tone="bad">Afventer betaling – må ikke leveres</Badge>}
           <Badge tone={o.wrapping ? 'wine' : undefined}>{o.wrapping ? 'Gaveindpakning' : 'Mulepose'}</Badge>
           <Badge tone={o.delivery_mode === 'home' ? 'warn' : undefined}>{o.delivery_mode === 'home' ? 'Sendes til hjemmeadresser' : 'Samlet til virksomheden'}</Badge>
           {o.delivery_date && <Badge>Leveres senest {dato(o.delivery_date)}</Badge>}

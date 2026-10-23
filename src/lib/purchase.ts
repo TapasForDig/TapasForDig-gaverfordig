@@ -177,6 +177,8 @@ export interface Purchase {
   moms: number;
   total_inc: number;
   invoiced_at: Date | null;
+  hold: boolean;
+  paid_at: Date | null;
   created_at: Date;
 }
 
@@ -266,7 +268,9 @@ export async function sendConfirmation(p: Purchase) {
     `Leveres til: ${deliveryAddressText(p)}`,
     `Betaling: ${p.payment === 'ean' ? `EAN ${p.ean}` : 'Faktura'}${p.po_number ? ` · Rekv.nr. ${p.po_number}` : ''}`,
     '',
-    p.codes_delivery === 'email'
+    p.hold
+      ? `Da det er jeres første bestilling, sender vi fakturaen nu. Gavekoderne sendes${p.codes_delivery === 'file' ? ' til medarbejderne' : ''}, så snart betalingen er registreret.`
+      : p.codes_delivery === 'email'
       ? 'Gavekoderne kommer i en separat mail.'
       : 'I har valgt, at vi sender gavekoderne direkte til medarbejderne. Upload jeres medarbejderliste i oversigten, hvis I ikke allerede har gjort det.',
     `Oversigt: ${appUrl()}/virksomhed/bestilling/${p.id}`,
@@ -280,8 +284,8 @@ export async function sendConfirmation(p: Purchase) {
   for (const a of admins)
     await sendMail(
       a.email,
-      `Ny bestilling ${p.id}: ${p.company_name} (${p.quantity} gaver)`,
-      `${p.company_name} · CVR ${p.cvr ?? '–'}\n${p.quantity} gaver · ${kr(p.total_inc)} inkl. moms\n${weekLabel(p.delivery_week)} · ${p.delivery_mode === 'home' ? 'hjemmelevering' : 'til virksomheden'}${p.wrapping ? ' · indpakning' : ''}\nBetaling: ${p.payment}${p.ean ? ` EAN ${p.ean}` : ''}\n\n${appUrl()}/admin/afregning`,
+      `${p.hold ? 'Afventer betaling – ' : ''}Ny bestilling ${p.id}: ${p.company_name} (${p.quantity} gaver)`,
+      `${p.hold ? 'AFVENTER BETALING – koderne er holdt tilbage\n\n' : ''}${p.company_name} · CVR ${p.cvr ?? '–'}\n${p.quantity} gaver · ${kr(p.total_inc)} inkl. moms\n${weekLabel(p.delivery_week)} · ${p.delivery_mode === 'home' ? 'hjemmelevering' : 'til virksomheden'}${p.wrapping ? ' · indpakning' : ''}\nBetaling: ${p.payment}${p.ean ? ` EAN ${p.ean}` : ''}\n\n${appUrl()}/admin/afregning`,
     );
 }
 
@@ -336,10 +340,57 @@ export async function assignRecipients(purchaseId: number, text: string, actor: 
       continue;
     }
     const c = free.splice(idx, 1)[0];
-    await q('update recipients set name = $1, email = $2, invited_at = now() where id = $3', [name, email, c.id]);
-    await sendMail(email, `Din julegave fra ${p.company_name}`, inviteMail(name, p.company_name, c.code, c.token, c.greeting, p.choose_deadline));
+    if (p.hold) {
+      // Afventer betaling: gem modtageren, mailen sendes når betalingen er registreret
+      await q('update recipients set name = $1, email = $2 where id = $3', [name, email, c.id]);
+    } else {
+      await q('update recipients set name = $1, email = $2, invited_at = now() where id = $3', [name, email, c.id]);
+      await sendMail(email, `Din julegave fra ${p.company_name}`, inviteMail(name, p.company_name, c.code, c.token, c.greeting, p.choose_deadline));
+    }
     assigned++;
   }
   await logEvent(actor, 'purchase', purchaseId, 'medarbejderliste uploadet', `${assigned} sendt, ${skipped.length} sprunget over`);
   return { assigned, skipped };
 }
+
+// ---------- Afventer betaling ----------
+
+// Nye kunder over grænsen betaler forud: koderne holdes tilbage, til betalingen er registreret.
+export async function needsPrepayment(companyId: number, totalInc: number, excludePurchase: number): Promise<boolean> {
+  const limit = Number((await one<{ value: string }>(`select value from settings where key = 'forudbetaling_graense_kr'`))?.value || 0);
+  if (!limit || totalInc < limit) return false;
+  const paidBefore = await one(`select 1 from purchases where company_id = $1 and paid_at is not null and id <> $2`, [companyId, excludePurchase]);
+  return !paidBefore;
+}
+
+// Frigiver koderne: sender kodemail eller invitationer til de medarbejdere, der allerede er tilknyttet.
+export async function releaseCodes(purchaseId: number, actor: string) {
+  await q('update purchases set hold = false where id = $1', [purchaseId]);
+  const p = (await getPurchase(purchaseId))!;
+  let sent = 0;
+  if (p.codes_delivery === 'email') {
+    await sendCodesMail(p);
+    sent = p.quantity;
+  } else {
+    const rs = await q<{ id: number; name: string; email: string; code: string; token: string; greeting: string | null }>(
+      `select r.id, r.name, r.email, r.code, r.token, o.greeting from recipients r join gift_orders o on o.id = r.order_id
+        where o.purchase_id = $1 and r.email is not null and r.invited_at is null`,
+      [purchaseId],
+    );
+    for (const r of rs) {
+      await sendMail(r.email, `Din julegave fra ${p.company_name}`, inviteMail(r.name, p.company_name, r.code, r.token, r.greeting, p.choose_deadline));
+      await q('update recipients set invited_at = now() where id = $1', [r.id]);
+    }
+    sent = rs.length;
+    await sendMail(
+      p.contact_email,
+      `Betaling modtaget – ordre ${p.id}`,
+      `Hej ${p.contact_first}\n\nTak, vi har registreret jeres betaling.\n${sent ? `Vi har nu sendt gavekoden til ${sent} medarbejdere.` : 'Upload jeres medarbejderliste i oversigten, så sender vi koderne.'}\n\n${appUrl()}/virksomhed/bestilling/${p.id}\n\nVenlig hilsen\nGaver For Dig`,
+    );
+  }
+  await logEvent(actor, 'purchase', purchaseId, 'koder frigivet', `${sent} sendt`);
+  return sent;
+}
+
+// SQL: modtageren hører til en bestilling, der afventer betaling
+export const HELD_SQL = `exists (select 1 from gift_orders ho join purchases hp on hp.id = ho.purchase_id where ho.id = recipients.order_id and hp.hold)`;

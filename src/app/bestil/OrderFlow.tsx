@@ -358,6 +358,10 @@ export default function OrderFlow({
                       Jeg accepterer{' '}
                       <Link href="/handelsbetingelser" target="_blank">
                         handelsbetingelserne
+                      </Link>{' '}
+                      og{' '}
+                      <Link href="/databehandleraftale" target="_blank">
+                        databehandleraftalen
                       </Link>
                     </span>
                   </label>

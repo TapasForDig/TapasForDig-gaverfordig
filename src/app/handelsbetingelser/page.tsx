@@ -34,7 +34,13 @@ export default async function Terms() {
         `Gaveindpakning koster ${kr(s.wrapFee)} ekskl. moms pr. gave. Uden indpakning leveres gaven i mulepose med navnelabel.`,
       ],
     ],
-    ['Betaling', ['Betaling sker via faktura (14 dage netto) eller EAN for offentlige kunder.']],
+    [
+      'Betaling',
+      [
+        'Betaling sker via faktura (14 dage netto) eller EAN for offentlige kunder.',
+        'Ved første bestilling over et vist beløb betales fakturaen forud. Gavekoderne sendes, så snart betalingen er registreret.',
+      ],
+    ],
     [
       'Reklamation',
       ['Er en gave defekt eller beskadiget ved levering, skal I kontakte os hurtigst muligt og senest 14 dage efter levering. Så sørger vi for en ny gave eller en anden løsning.'],
@@ -44,6 +50,7 @@ export default async function Terms() {
       [
         'Uploader virksomheden navne og e-mails på medarbejdere, behandler vi oplysningerne som databehandler på vegne af virksomheden og kun for at levere gaverne.',
         'Oplysninger om medarbejdere slettes senest 6 måneder efter levering. Regnskabsdata gemmes efter bogføringsloven.',
+        'Databehandleraftalen (gaverfordig.dk/databehandleraftale) er en del af disse betingelser. Se også privatlivspolitikken på gaverfordig.dk/privatliv.',
       ],
     ],
   ];

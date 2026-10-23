@@ -12,6 +12,7 @@ import {
   deliveryWeeks,
   getPurchase,
   newGiftCode,
+  needsPrepayment,
   sendCodesMail,
   sendConfirmation,
   shopSettings,
@@ -72,6 +73,7 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
   const payment = v.payment === 'ean' ? 'ean' : 'faktura';
   const ean = (v.ean || '').replace(/\D/g, '');
   if (payment === 'ean' && ean.length !== 13) return fail('EAN-nummeret skal være 13 cifre.');
+  if (v.terms !== '1') return fail('Accepter handelsbetingelserne og databehandleraftalen for at bestille.');
   if (ean && ean.length !== 13) return fail('EAN-nummeret skal være 13 cifre.');
   const deliverySame = mode === 'home' || v.delivery_same === '1';
   if (!deliverySame && (!v.delivery_address || !v.delivery_zip || !v.delivery_city)) return fail('Udfyld leveringsadressen.');
@@ -152,10 +154,14 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
   }
   await logEvent(contactEmail, 'purchase', purchaseId, 'bestilt', `${totals.qty} gaver, ${totals.total} kr. inkl. moms`);
 
+  if (await needsPrepayment(companyId, totals.total, purchaseId)) {
+    await q('update purchases set hold = true where id = $1', [purchaseId]);
+    await logEvent('system', 'purchase', purchaseId, 'afventer betaling', 'ny kunde over grænsen for forudbetaling');
+  }
   const purchase = (await getPurchase(purchaseId))!;
   await sendConfirmation(purchase);
   if (codesDelivery === 'email') {
-    await sendCodesMail(purchase);
+    if (!purchase.hold) await sendCodesMail(purchase);
   } else {
     let text = v.recipients_text || '';
     const file = fd.get('recipients_file');

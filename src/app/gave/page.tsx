@@ -21,8 +21,9 @@ async function deadlineFor(o: { choose_deadline: Date | null; season_id: number 
 async function redeem(fd: FormData) {
   'use server';
   const code = normalizeCode(str(fd, 'code'));
-  const r = await one<{ id: number; token: string }>('select id, token from recipients where code = $1', [code]);
+  const r = await one<{ id: number; token: string; held: boolean }>(`select id, token, exists (select 1 from gift_orders ho join purchases hp on hp.id = ho.purchase_id where ho.id = recipients.order_id and hp.hold) as held from recipients where code = $1`, [code]);
   if (!r) redirect('/gave?m=' + encodeURIComponent('!Koden findes ikke. Tjek at du har skrevet den rigtigt – fx ABCD-EFGH.'));
+  if (r.held) redirect('/gave?ikkeaktiv=1');
   await q('update recipients set opened_at = coalesce(opened_at, now()) where id = $1', [r.id]);
   const jar = await cookies();
   jar.set(RECIPIENT_COOKIE_NAME, r.token, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', maxAge: 60 * 60 * 24 * 90, path: '/' });
@@ -87,7 +88,7 @@ async function choose(fd: FormData) {
   redirect('/gave?m=' + encodeURIComponent(`Du har valgt ${p.name}. Du får en bekræftelse på mail.`));
 }
 
-export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string; ret?: string }> }) {
+export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string; ikkeaktiv?: string; ret?: string }> }) {
   const sp = await searchParams;
   const r = await currentRecipient();
   if (!r) {
@@ -98,6 +99,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           <div className="card stack-s" style={{ maxWidth: 560, margin: '40px auto' }}>
             <h1 style={{ fontSize: 28 }}>Vælg din gave</h1>
             {sp.ugyldig && <div className="alert bad">Linket er ikke gyldigt. Tjek at du har brugt hele linket fra mailen.</div>}
+            {sp.ikkeaktiv && <div className="alert">Gavekortet er ikke aktiveret endnu. Prøv igen om lidt, eller spørg den, der har givet dig koden.</div>}
             <Notice msg={sp.m} />
             <p className="muted">Skriv den gavekode, du har fået fra din arbejdsplads. Har du fået et personligt link på mail, kan du også bare klikke på det.</p>
             <form action={redeem} className="form">
