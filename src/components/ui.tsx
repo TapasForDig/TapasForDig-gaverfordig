@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { images } from '@/lib/format';
 import { currentUser } from '@/lib/auth';
+import { MobileMenu } from './MobileMenu';
 
 export function TopBar() {
   return <div className="topbar">Lokale gaver · Pakket og leveret samlet · Fra butikker i Vejen Kommune</div>;
@@ -24,13 +25,20 @@ export function PublicHeader({ active }: { active?: string }) {
           <Link href="/" className="logo">
             <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
           </Link>
-          <nav className="nav" aria-label="Hovedmenu">
+          <nav className="nav nav-desktop" aria-label="Hovedmenu">
             {links.map((l) => (
               <Link key={l.href} href={l.href} className={active === l.href ? 'on' : ''}>
                 {l.label}
               </Link>
             ))}
           </nav>
+          <MobileMenu>
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className={active === l.href ? 'on' : ''}>
+                {l.label}
+              </Link>
+            ))}
+          </MobileMenu>
         </div>
       </header>
     </>
@@ -78,18 +86,26 @@ export async function Shell({
             <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
             {area && <span>{area}</span>}
           </Link>
-          <nav className="nav" aria-label="Hovedmenu">
+          <nav className="nav nav-desktop" aria-label="Hovedmenu">
             {nav?.map((n) => (
               <Link key={n.href} href={n.href} className={active === n.href ? 'on' : ''}>
                 {n.label}
               </Link>
             ))}
-            {showLogout && (
-              <form action="/logout" method="post">
-                <button type="submit">Log ud</button>
-              </form>
-            )}
+            <form action="/logout" method="post">
+              <button type="submit">Log ud</button>
+            </form>
           </nav>
+          <MobileMenu>
+            {nav?.map((n) => (
+              <Link key={n.href} href={n.href} className={active === n.href ? 'on' : ''}>
+                {n.label}
+              </Link>
+            ))}
+            <form action="/logout" method="post">
+              <button type="submit">Log ud</button>
+            </form>
+          </MobileMenu>
         </div>
       </header>
       <main className="wrap">{children}</main>

@@ -338,6 +338,16 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .band-text { position: absolute; z-index: 1; left: 0; top: 0; bottom: 0; max-width: 480px; padding: 36px; display: flex; flex-direction: column; justify-content: center; gap: 10px; color: #fff; }
 .band-text h2 { color: #fff; font-size: clamp(24px, 3vw, 34px); }
 .band-text p { margin: 0; font-size: 16px; opacity: .92; }
+@media (max-width: 700px) {
+  /* På mobil: ingen fast billedformat (det tvang båndet bredere end skærmen) – teksten bestemmer højden */
+  .band { aspect-ratio: auto; min-height: 0; }
+  .band::after { background: linear-gradient(0deg, rgba(20,30,24,.85) 0%, rgba(20,30,24,.55) 100%); }
+  .band-text { position: relative; max-width: none; padding: 28px 22px 86px; }
+  .band-text h2 { font-size: 26px; }
+  .band-text p { font-size: 15px; }
+  .town-flow { padding: 10px 0 16px; }
+  .town-track span { font-size: 22px; padding: 0 14px; }
+}
 
 .town-flow { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; overflow: hidden; padding: 14px 0 18px; background: linear-gradient(0deg, rgba(20,30,24,.6), rgba(20,30,24,0)); -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
 .town-track { display: flex; width: max-content; animation: town-flow 60s linear infinite; }
@@ -393,3 +403,23 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .site-footer a:hover { text-decoration: underline; }
 .legal p, .legal li { font-size: 15px; line-height: 1.65; color: var(--ink); }
 .legal ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+
+/* Mobilmenu */
+.nav-mobile { display: none; }
+@media (max-width: 760px) {
+  .topbar { display: none; }
+  .header-inner { flex-wrap: nowrap; position: relative; }
+  .nav-desktop { display: none !important; }
+  .nav-mobile { display: block; }
+  .nav-mobile summary { list-style: none; display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .04em; padding: 8px 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 8px; min-height: 44px; }
+  .nav-mobile summary::-webkit-details-marker { display: none; }
+  .nav-mobile[open] summary { background: rgba(255,255,255,.12); }
+  .nav-mobile-list { position: absolute; left: 0; right: 0; top: 100%; z-index: 50; background: var(--green); border-top: 1px solid rgba(255,255,255,.15); box-shadow: 0 12px 24px rgba(0,0,0,.18); display: flex; flex-direction: column; padding: 6px 16px 14px; }
+  .nav-mobile-list a, .nav-mobile-list button { display: block; width: 100%; text-align: left; color: #fff; text-decoration: none; font-size: 17px; font-weight: 600; padding: 13px 4px; border: 0; border-bottom: 1px solid rgba(255,255,255,.12); background: none; font-family: inherit; cursor: pointer; }
+  .nav-mobile-list a.on { color: var(--gold); }
+  .nav-mobile-list form { margin: 0; }
+  .logo-img { width: 180px; }
+  /* Leveringsbanner: kort på mobil */
+  .deadline-inner { flex-wrap: nowrap; padding: 10px 16px; font-size: 13px; gap: 12px; }
+  .deadline-bar .extra { display: none; }
+}

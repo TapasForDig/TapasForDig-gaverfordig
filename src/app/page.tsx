@@ -37,9 +37,11 @@ export default async function Home() {
         <div className="deadline-bar">
           <div className="deadline-inner">
             <span>
-              <b>Næste levering: uge {next.week}</b>
+              <b><span className="extra">Næste levering: </span>Uge {next.week}</b>
               <span className="sep">·</span>Bestil inden <b>{fmt(next.chooseDeadline)}</b>
-              <span className="sep">·</span>Leveres senest {fmt(next.deliveryDate + 'T12:00:00Z')}
+              <span className="extra">
+                <span className="sep">·</span>Leveres senest {fmt(next.deliveryDate + 'T12:00:00Z')}
+              </span>
             </span>
             <Link href="/bestil">Bestil nu →</Link>
           </div>
