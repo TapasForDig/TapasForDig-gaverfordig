@@ -10,20 +10,37 @@ const inDays = (n: number) => new Date(Date.now() + n * 86400000);
 
 // Fylder en tom database med demo-data, så alle portaler kan prøves med det samme.
 // Slås fra med NO_DEMO=1 (så oprettes kun en admin ud fra ADMIN_EMAIL / ADMIN_PASSWORD).
+// Sørger for at admin fra ADMIN_EMAIL / ADMIN_PASSWORD altid findes og har den adgangskode,
+// der står i miljøvariablerne. Ændrer man ADMIN_PASSWORD i Vercel og deployer igen, virker den nye kode.
+async function ensureAdmin(d: Driver) {
+  const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  const pw = process.env.ADMIN_PASSWORD?.trim();
+  if (!email || !pw) return;
+  const u = (await d.query<{ id: number; password_hash: string }>('select id, password_hash from users where email = $1', [email])).rows[0];
+  if (!u) {
+    await d.query(`insert into users (email, password_hash, name, role) values ($1,$2,'Admin','admin') on conflict (email) do nothing`, [email, hash(pw)]);
+    return;
+  }
+  const [salt, h] = u.password_hash.split(':');
+  const same = salt && h && crypto.scryptSync(pw, salt, 64).toString('hex') === h;
+  if (!same) await d.query(`update users set password_hash = $1, role = 'admin' where id = $2`, [hash(pw), u.id]);
+}
+
 export async function seedIfEmpty(d: Driver) {
-  const { rows } = await d.query<{ n: number }>('select count(*)::int as n from users');
-  if (rows[0].n > 0) return;
+  await ensureAdmin(d);
+
+  // Kun én server må lave grunddata, og kun én gang (flere Vercel-instanser kan starte samtidig)
+  const claim = await d.query(`insert into settings (key, value) values ('seeded', now()::text) on conflict (key) do nothing returning key`);
+  if (claim.rows.length === 0) return;
+  // Databaser fra før denne markør: har allerede priskategorier → spring over
+  const existing = await d.query<{ n: number }>('select count(*)::int as n from price_categories');
+  if (existing.rows[0].n > 0) return;
 
   const ins = async <T = { id: number }>(sql: string, p: unknown[]) => (await d.query<T>(sql, p)).rows[0];
 
   await d.query(`insert into settings (key, value) values ('indkoebsrabat_pct',''),('gebyr_pr_modtager_kr','0'),('logistik_adresse','[Adresse på logistikcentralen], Brørup') on conflict do nothing`);
 
   if (process.env.NO_DEMO === '1') {
-    const email = process.env.ADMIN_EMAIL;
-    const pw = process.env.ADMIN_PASSWORD;
-    if (email && pw) {
-      await d.query(`insert into users (email, password_hash, name, role) values ($1,$2,'Admin','admin')`, [email.toLowerCase(), hash(pw)]);
-    }
     await seedCategories(d);
     return;
   }
