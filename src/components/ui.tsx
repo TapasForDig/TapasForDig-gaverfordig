@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { images } from '@/lib/format';
+import { currentUser } from '@/lib/auth';
 
 export function TopBar() {
   return <div className="topbar">Lokale gaver · Pakket og leveret samlet · Fra butikker i Vejen Kommune</div>;
@@ -35,7 +36,7 @@ export function PublicHeader({ active }: { active?: string }) {
   );
 }
 
-export function Shell({
+export async function Shell({
   area,
   nav,
   active,
@@ -48,9 +49,20 @@ export function Shell({
   children: React.ReactNode;
   showLogout?: boolean;
 }) {
+  const me = showLogout ? await currentUser() : null;
+  const adminVisiting = me?.role === 'admin' && area !== 'Admin';
   return (
     <>
       <TopBar />
+      {adminVisiting && (
+        <div className="admin-bar">
+          <span>
+            Du er logget ind som <b>admin</b> og ser siden, som {area?.startsWith('Butik') ? 'butikken' : area === 'Logistikcentral' ? 'logistikcentralen' : 'virksomheden'} ser den. Ændringer, du laver her, gemmes
+            på {area?.startsWith('Butik') ? 'butikkens' : 'deres'} vegne.
+          </span>
+          <Link href="/admin">← Tilbage til admin</Link>
+        </div>
+      )}
       <header className="header">
         <div className="header-inner">
           <Link href="/" className="logo">

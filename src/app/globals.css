@@ -312,3 +312,6 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .food-info summary { cursor: pointer; font-weight: 600; }
 .food-info details p { margin-top: 6px; }
 .food-info .muted { color: #7a5c22; }
+
+.admin-bar { background: var(--wine); color: #fff; font-size: 13px; padding: 8px 16px; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; align-items: center; text-align: center; }
+.admin-bar a { color: #fff; font-weight: 700; }
