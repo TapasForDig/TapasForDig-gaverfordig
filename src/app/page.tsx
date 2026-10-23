@@ -4,6 +4,7 @@ import { PublicHeader } from '@/components/ui';
 import { categories, getSetting } from '@/lib/gifts';
 import { kr } from '@/lib/format';
 import { deliveryWeeks, incl, shopSettings } from '@/lib/purchase';
+import { publicShops } from '@/lib/shops';
 
 const TOWNS = ['Brørup', 'Vejen', 'Rødding', 'Holsted', 'Askov', 'Lintrup', 'Gesten', 'Jels', 'Skodborg', 'Bække', 'Hovborg', 'Føvling', 'Lindknud', 'Glejbjerg', 'Andst', 'Malt'];
 
@@ -24,6 +25,7 @@ export default async function Home() {
     getSetting('forside_baand_overskrift'),
     getSetting('forside_baand_tekst'),
   ]);
+  const shops = await publicShops();
   const next = deliveryWeeks(s).find((w) => w.available);
   const demo = process.env.NO_DEMO !== '1';
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' });
@@ -129,6 +131,22 @@ export default async function Home() {
                   <span key={i}>{t}</span>
                 ))}
               </div>
+            </div>
+          </section>
+        )}
+
+        {shops.length > 0 && (
+          <section className="stack-s">
+            <div className="row between end">
+              <h2 style={{ fontSize: 24 }}>Butikkerne bag gaverne</h2>
+              <Link href="/butikker">Se alle {shops.length} butikker →</Link>
+            </div>
+            <div className="logo-strip">
+              {shops.slice(0, 12).map((x) => (
+                <Link key={x.id} href="/butikker" title={x.name}>
+                  {x.logo ? <img src={x.logo} alt={x.name} /> : x.name}
+                </Link>
+              ))}
             </div>
           </section>
         )}

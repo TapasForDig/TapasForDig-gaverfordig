@@ -205,6 +205,8 @@ create table if not exists purchases (
   created_at timestamptz not null default now()
 );
 
+alter table shops add column if not exists logo text;
+alter table shops add column if not exists website text;
 alter table gift_orders add column if not exists purchase_id integer references purchases(id) on delete cascade;
 alter table gift_orders add column if not exists quantity integer;
 alter table gift_orders add column if not exists choose_deadline timestamptz;

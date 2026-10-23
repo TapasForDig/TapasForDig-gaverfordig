@@ -11,6 +11,7 @@ export function PublicHeader({ active }: { active?: string }) {
   const links = [
     { href: '/bestil', label: 'Bestil gavekort' },
     { href: '/#saadan', label: 'Sådan virker det' },
+    { href: '/butikker', label: 'Butikkerne' },
     { href: '/skatteregler', label: 'Skatteregler' },
     { href: '/butik/tilmeld', label: 'For butikker' },
     { href: '/login', label: 'Log ind' },

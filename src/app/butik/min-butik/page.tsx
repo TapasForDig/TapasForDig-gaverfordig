@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
+import { ImageUpload } from '@/components/ImageUpload';
 import { Badge, Notice, Shell } from '@/components/ui';
 import { checkPassword, hashPassword, newToken } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { appUrl, str } from '@/lib/format';
 import { sendMail } from '@/lib/mail';
+import { saveImage } from '@/lib/storage';
 import { shopNav } from '../nav';
 import { myShop } from '../shop';
 
@@ -17,6 +19,8 @@ interface ShopRow {
   phone: string | null;
   email: string | null;
   story: string | null;
+  logo: string | null;
+  website: string | null;
   status: string;
 }
 
@@ -27,7 +31,20 @@ async function saveShop(fd: FormData) {
   const { u, shop } = await myShop(str(fd, 'butik'));
   const email = str(fd, 'email').toLowerCase();
   if (!str(fd, 'name')) back(shop.id, '!Butikken skal have et navn');
-  await q(`update shops set name=$1, cvr=$2, address=$3, town=$4, contact_name=$5, phone=$6, email=$7, story=$8 where id=$9`, [
+  let website = str(fd, 'website');
+  if (website && !/^https?:\/\//i.test(website)) website = 'https://' + website;
+  const f = fd.get('logo');
+  if (fd.get('logo_fjern') === 'ja') await q('update shops set logo = null where id = $1', [shop.id]);
+  else if (f instanceof File && f.size > 0) {
+    let url = '';
+    try {
+      url = await saveImage(f);
+    } catch (e) {
+      back(shop.id, '!' + (e as Error).message);
+    }
+    await q('update shops set logo = $1 where id = $2', [url, shop.id]);
+  }
+  await q(`update shops set name=$1, cvr=$2, address=$3, town=$4, contact_name=$5, phone=$6, email=$7, story=$8, website=$10 where id=$9`, [
     str(fd, 'name'),
     str(fd, 'cvr'),
     str(fd, 'address'),
@@ -37,6 +54,7 @@ async function saveShop(fd: FormData) {
     email || null,
     str(fd, 'story').slice(0, 400),
     shop.id,
+    website || null,
   ]);
   await logEvent(u.email, 'shop', shop.id, 'oplysninger rettet');
   back(shop.id, 'Oplysningerne er gemt');
@@ -121,10 +139,28 @@ export default async function MyShop({ searchParams }: { searchParams: Promise<{
               {f('phone', 'Telefon', 'tel')}
               {f('email', 'E-mail til ordrer og afleveringslister', 'email')}
             </div>
-            <div className="field">
-              <label htmlFor="story">Kort om butikken</label>
-              <textarea id="story" name="story" maxLength={400} defaultValue={s.story ?? ''} />
-              <span className="hint">Vises for medarbejderne. Maks. 400 tegn.</span>
+            <h2 style={{ marginTop: 8 }}>Sådan præsenteres butikken</h2>
+            <p className="hint" style={{ marginTop: -6 }}>
+              Vises på siden <a href="/butikker" target="_blank">Deltagende butikker</a> og ved jeres gaver.
+            </p>
+            <div className="grid-2" style={{ alignItems: 'start' }}>
+              <div className="stack-s">
+                <ImageUpload name="logo" current={s.logo} label="Logo" logo maxSide={800} aspect="3 / 2" />
+                <span className="hint">PNG med gennemsigtig baggrund er bedst. Mindst 600 px bredt. Liggende eller kvadratisk logo.</span>
+                {s.logo && (
+                  <label className="check small">
+                    <input type="checkbox" name="logo_fjern" value="ja" /> Fjern logoet
+                  </label>
+                )}
+              </div>
+              <div className="stack-s">
+                <div className="field">
+                  <label htmlFor="story">Kort om butikken</label>
+                  <textarea id="story" name="story" maxLength={400} defaultValue={s.story ?? ''} style={{ minHeight: 140 }} placeholder="Fx: Familiedrevet blomsterbutik i Rødding siden 1987. Vi binder alt selv og elsker sæsonens blomster." />
+                  <span className="hint">2–3 sætninger. Hvem er I, og hvad er I gode til? Maks. 400 tegn.</span>
+                </div>
+                {f('website', 'Hjemmeside', 'text', 'Fx www.butik.dk – valgfri')}
+              </div>
             </div>
             <div>
               <button className="btn" type="submit">

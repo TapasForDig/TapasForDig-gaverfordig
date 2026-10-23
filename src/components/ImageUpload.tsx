@@ -3,7 +3,21 @@
 import { useRef, useState } from 'react';
 
 // Ét billede: gøres mindre i browseren (så upload holder sig under Vercels grænse) og vises som forhåndsvisning
-export function ImageUpload({ name, current, maxSide = 2000, aspect = '16 / 10', label }: { name: string; current?: string | null; maxSide?: number; aspect?: string; label: string }) {
+export function ImageUpload({
+  name,
+  current,
+  maxSide = 2000,
+  aspect = '16 / 10',
+  label,
+  logo = false,
+}: {
+  name: string;
+  current?: string | null;
+  maxSide?: number;
+  aspect?: string;
+  label: string;
+  logo?: boolean; // bevar gennemsigtighed (PNG) og vis hele billedet
+}) {
   const field = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(current ?? null);
   const [info, setInfo] = useState('');
@@ -20,12 +34,14 @@ export function ImageUpload({ name, current, maxSide = 2000, aspect = '16 / 10',
       c.width = w;
       c.height = h;
       const ctx = c.getContext('2d')!;
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, w, h);
+      if (!logo) {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+      }
       ctx.drawImage(bmp, 0, 0, w, h);
-      const blob: Blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error())), 'image/jpeg', 0.86));
+      const blob: Blob = await new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error())), logo ? 'image/png' : 'image/jpeg', 0.86));
       const dt = new DataTransfer();
-      dt.items.add(new File([blob], 'billede.jpg', { type: 'image/jpeg' }));
+      dt.items.add(new File([blob], logo ? 'logo.png' : 'billede.jpg', { type: logo ? 'image/png' : 'image/jpeg' }));
       if (field.current) field.current.files = dt.files;
       setPreview(URL.createObjectURL(blob));
       setInfo(`${bmp.width} × ${bmp.height} px → gemmes som ${w} × ${h} px`);
@@ -37,7 +53,7 @@ export function ImageUpload({ name, current, maxSide = 2000, aspect = '16 / 10',
   return (
     <div className="field">
       <span className="label">{label}</span>
-      <div className="upload-frame" style={{ aspectRatio: aspect }}>
+      <div className={`upload-frame ${logo ? 'logo' : ''}`} style={{ aspectRatio: aspect }}>
         {preview ? <img src={preview} alt="" /> : <span className="muted small">Intet billede</span>}
       </div>
       <input ref={field} type="file" name={name} hidden tabIndex={-1} aria-hidden="true" />

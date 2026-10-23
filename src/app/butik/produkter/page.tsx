@@ -25,6 +25,7 @@ export default async function ShopProducts({ searchParams }: { searchParams: Pro
   const steps: [boolean, string, string][] = [
     [true, 'Butikken er oprettet', 'Du er logget ind og kan oprette gaver.'],
     [shop.status === 'approved', 'Butikken godkendes', shop.status === 'approved' ? 'Din butik er godkendt.' : 'Vi godkender butikken inden for 2 hverdage.'],
+    [!!(shop.logo && shop.story), 'Logo og kort beskrivelse', 'Under "Min butik". Vises på siden med deltagende butikker.'],
     [products.length > 0, 'Opret din første gave', 'Det tager ca. 10 minutter. Tag billederne med telefonen.'],
     [approved > 0, 'Gaven godkendes', 'Når gaven er godkendt, kan medarbejderne vælge den.'],
     [groupsCovered >= 2, 'Gaver i flere prisgrupper', 'Butikker med gaver i 2–3 prisgrupper bliver valgt oftere.'],
