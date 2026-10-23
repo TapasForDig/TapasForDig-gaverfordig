@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Mail 1 til butikker – Gaver For Dig</title>
+<style>
+  body { margin: 0; background: #ece8df; font-family: Arial, Helvetica, sans-serif; }
+  .tool { max-width: 640px; margin: 0 auto; padding: 20px 16px 0; font-size: 14px; color: #1f2a24; }
+  .tool b { display: block; margin-bottom: 4px; }
+  .tool .subject { background: #fff; border: 1px solid #d6d0c3; border-radius: 8px; padding: 10px 12px; margin: 6px 0 10px; }
+  .tool button { background: #415743; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: bold; cursor: pointer; margin-right: 8px; }
+  .tool .ok { color: #2f5a2b; font-weight: bold; }
+  @media print { .tool { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="tool">
+  <p style="margin:0 0 12px"><a href="/mail/index.html" style="color:#415743">← Alle mails</a> · <b style="display:inline">Mail 1 af 2:</b> kort intro – nyheden og konceptet</p>
+  <b>Emne</b>
+  <div class="subject" id="subject">Nyt i Vejen Kommune: firmagaver fra lokale butikker – vil [Butik] være med?</div>
+  <button type="button" onclick="copyMail()">Kopiér mailen</button>
+  <button type="button" onclick="copySubject()" style="background:#fff;color:#415743;border:1px solid #415743">Kopiér emne</button>
+  <span id="msg" class="ok"></span>
+  <p style="color:#4d5a52;margin:10px 0 20px">Tryk "Kopiér mailen", og sæt den ind i en ny mail i dit mailprogram (Ctrl+V / Cmd+V). Billederne hentes fra gaverfordig.dk, så de vises også hos modtageren. Ret <b style="display:inline;margin:0">[Navn]</b> og <b style="display:inline;margin:0">[Butik]</b> før du sender.</p>
+</div>
+
+<!-- MAIL START -->
+<div id="mail">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ece8df;">
+<tr><td align="center" style="padding:0 8px 32px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#1f2a24;">
+
+  <tr><td style="background:#415743;padding:22px 28px;">
+    <img src="https://www.gaverfordig.dk/logo-white.png" width="190" alt="Gaver For Dig" style="display:block;width:190px;height:auto;border:0;">
+    <div style="color:#e9d5a0;font-size:12px;letter-spacing:1px;font-weight:bold;margin-top:8px;text-transform:uppercase;">Nyhed · Firmagaver fra lokale butikker</div>
+  </td></tr>
+
+  <tr><td style="padding:28px 28px 6px;font-size:15px;line-height:1.6;">
+    <p style="margin:0 0 14px;">Hej [Navn]</p>
+    <p style="margin:0 0 14px;">Vi har en nyhed, som vi tror, du vil synes om.</p>
+    <p style="margin:0 0 14px;">Hvert år bruger virksomhederne i Vejen Kommune mange penge på julegaver til deres medarbejdere. Men det meste bliver købt hos store, nationale gavefirmaer – og så forsvinder pengene ud af kommunen. Det synes vi er ærgerligt, når vi har så mange gode butikker lige her.</p>
+    <p style="margin:0;">Derfor har vi i Vinfordig – os bag Vin For Dig og Tapas For Dig i Brørup – bygget <b>Gaver For Dig</b>: en lokal gaveportal, hvor firmagaverne kommer fra butikkerne i kommunen.</p>
+  </td></tr>
+
+  <tr><td style="padding:20px 28px 4px;">
+    <div style="background:#f6f4ef;border-radius:10px;padding:18px 20px;font-size:15px;line-height:1.55;">
+      <div style="font-size:13px;letter-spacing:1px;font-weight:bold;color:#415743;text-transform:uppercase;margin-bottom:8px;">Kort fortalt</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr><td valign="top" style="width:28px;padding:4px 0;font-weight:bold;color:#7b2d3b;">1.</td><td style="padding:4px 0;">Virksomheder køber gavekort til deres medarbejdere.</td></tr>
+        <tr><td valign="top" style="width:28px;padding:4px 0;font-weight:bold;color:#7b2d3b;">2.</td><td style="padding:4px 0;">Medarbejderne vælger selv en gave blandt varer fra lokale butikker.</td></tr>
+        <tr><td valign="top" style="width:28px;padding:4px 0;font-weight:bold;color:#7b2d3b;">3.</td><td style="padding:4px 0;">Butikken afleverer det, der er valgt, hos os i Brørup – vi pakker og leverer samlet til virksomheden.</td></tr>
+      </table>
+      <p style="margin:10px 0 0;font-size:14px;color:#4d5a52;">Butikken sælger kun det, der faktisk bliver valgt. Intet lager hos os og ingen binding.</p>
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:22px 28px 6px;font-size:15px;line-height:1.6;">
+    <p style="margin:0 0 14px;">Vi åbner nu for de første butikker før julesæsonen, og vi vil rigtig gerne have <b>[Butik]</b> med.</p>
+    <p style="margin:0;"><b>Vil du høre mere?</b> Svar bare på denne mail eller ring til mig, så sender jeg det hele – eller kigger forbi butikken til en kop kaffe.</p>
+  </td></tr>
+
+  <tr><td align="center" style="padding:22px 28px 6px;">
+    <a href="https://www.gaverfordig.dk" style="display:inline-block;background:#415743;color:#ffffff;text-decoration:none;font-weight:bold;font-size:15px;padding:12px 24px;border-radius:8px;">Se gaverfordig.dk</a>
+  </td></tr>
+
+  <tr><td style="padding:22px 28px 28px;font-size:15px;line-height:1.6;">
+    <p style="margin:0;">Med venlig hilsen</p>
+    <p style="margin:4px 0 0;"><b>Mathias Bruhn</b><br>Gaver For Dig · Vinfordig ApS<br>Tlf. 28 14 49 95 · <a href="mailto:info@gaverfordig.dk" style="color:#415743;">info@gaverfordig.dk</a></p>
+  </td></tr>
+
+  <tr><td style="background:#2e3d31;color:#c9d1ca;font-size:12px;padding:14px 28px;">Gaver For Dig · Vinfordig ApS · CVR 35854258 · Merkurvej 1A, 6650 Brørup</td></tr>
+</table>
+</td></tr>
+</table>
+</div>
+<!-- MAIL SLUT -->
+
+<script>
+  function done(t) { var m = document.getElementById('msg'); m.textContent = t; setTimeout(function () { m.textContent = ''; }, 3000); }
+  function copyMail() {
+    var el = document.getElementById('mail');
+    var html = el.innerHTML, text = el.innerText;
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })])
+          .then(function () { done('Kopieret ✓'); }, fallback);
+        return;
+      }
+    } catch (e) {}
+    fallback();
+    function fallback() {
+      var r = document.createRange(); r.selectNode(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      try { document.execCommand('copy'); done('Kopieret ✓'); } catch (e) { done('Markér mailen og tryk Ctrl+C'); }
+      s.removeAllRanges();
+    }
+  }
+  function copySubject() {
+    var t = document.getElementById('subject').innerText;
+    try { navigator.clipboard.writeText(t).then(function () { done('Emne kopieret ✓'); }); } catch (e) { done('Markér emnet og kopiér'); }
+  }
+</script>
+</body>
+</html>
