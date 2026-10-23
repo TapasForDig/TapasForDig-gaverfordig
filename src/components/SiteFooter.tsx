@@ -9,6 +9,7 @@ export function SiteFooter() {
           <Link href="/handelsbetingelser">Handelsbetingelser</Link>
           <Link href="/privatliv">Privatlivspolitik</Link>
           <Link href="/databehandleraftale">Databehandleraftale</Link>
+          <Link href="/cookies">Cookies</Link>
           <Link href="/butikker">Butikkerne</Link>
         </nav>
       </div>

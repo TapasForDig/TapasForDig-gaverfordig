@@ -20,7 +20,7 @@ export default async function Privacy() {
             ['Besøgende på siden', 'Teknisk nødvendige cookies til login', 'Få siden til at virke', 'Legitim interesse (litra f)', 'Login: 30 dage. Indkøbskurven gemmes kun i din egen browser'],
           ],
         },
-        'Vi bruger ikke cookies til statistik eller markedsføring. Begynder vi på det, beder vi om dit samtykke først.',
+        'Vi bruger kun nødvendige cookies og ingen cookies til statistik eller markedsføring. Se cookiepolitikken på gaverfordig.dk/cookies. Begynder vi at bruge andre cookies, beder vi om dit samtykke først.',
       ],
     ],
     [

@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
 import { SiteFooter } from '@/components/SiteFooter';
+// Cairo hostes selv (ingen opslag hos Google Fonts, så besøgendes IP-adresse ikke sendes til Google)
+import '@fontsource/cairo/400.css';
+import '@fontsource/cairo/500.css';
+import '@fontsource/cairo/600.css';
+import '@fontsource/cairo/700.css';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -12,12 +17,6 @@ export const dynamic = 'force-dynamic';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="da">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" />
-      </head>
       <body>
         {children}
         <SiteFooter />
