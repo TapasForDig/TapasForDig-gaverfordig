@@ -11,6 +11,7 @@
   --line-soft: #ece8df;
   --field: #d6d0c3;
   --wine: #7b2d3b;
+  --gold: #e9d5a0;
   --ok-bg: #e3eddf; --ok: #2f5a2b;
   --warn-bg: #f3e7cf; --warn: #7a4e0a;
   --bad-bg: #f4ded6; --bad: #8a2e14;
@@ -326,11 +327,11 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .hero-fallback { height: 100%; padding: 32px; display: flex; flex-direction: column; justify-content: center; gap: 10px; color: #fff; }
 .hero-fallback .eyebrow { color: rgba(255,255,255,.7); }
 .hero-fallback .towns { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: clamp(22px, 3vw, 34px); font-weight: 700; line-height: 1.2; }
-.hero-fallback .towns span:nth-child(3n+2) { color: #e9d5a0; }
-.deadline-bar { background: var(--wine); color: #fff; font-size: 14px; }
+.hero-fallback .towns span:nth-child(3n+2) { color: var(--gold); }
+.deadline-bar { background: var(--gold); color: var(--green-dark); font-size: 14px; border-bottom: 1px solid #d9c287; }
 .deadline-inner { max-width: 1180px; margin: 0 auto; padding: 10px 24px; display: flex; flex-wrap: wrap; gap: 6px 20px; justify-content: space-between; align-items: center; }
 .deadline-bar .sep { opacity: .5; margin: 0 10px; }
-.deadline-bar a { color: #fff; font-weight: 700; white-space: nowrap; }
+.deadline-bar a { color: var(--green-dark); font-weight: 700; white-space: nowrap; }
 
 .band { position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16 / 7; min-height: 280px; background: var(--green-dark); }
 .band img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
