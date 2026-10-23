@@ -99,8 +99,9 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
             (select count(*)::int from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = p.id and r.invited_at is not null) as sent
        from purchases p order by p.hold desc, p.paid_at is not null, p.invoiced_at is not null, p.created_at desc`,
   );
-  const settle = await q<{ shop: string; cvr: string | null; product: string; n: number; received: number; cost_kr: number | null; value_kr: number | null }>(
-    `select s.name as shop, s.cvr, p.name as product, count(*)::int as n, count(r.received_at)::int as received, p.cost_kr, pc.value_kr
+  const settle = await q<{ shop: string; cvr: string | null; product: string; n: number; received: number; wrapped: number; cost_kr: number | null; value_kr: number | null }>(
+    `select s.name as shop, s.cvr, p.name as product, count(*)::int as n, count(r.received_at)::int as received,
+            count(r.received_at) filter (where o.wrapping)::int as wrapped, p.cost_kr, pc.value_kr
        from recipients r join products p on p.id = r.chosen_product_id join shops s on s.id = p.shop_id
        join gift_orders o on o.id = r.order_id left join price_categories pc on pc.id = p.price_category_id
       where o.season_id = $1 group by s.name, s.cvr, p.name, p.cost_kr, pc.value_kr order by s.name, p.name`,
@@ -108,12 +109,14 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
   );
   const pct = rabat === '' ? null : Number(rabat);
   const unit = (r: (typeof settle)[number]) => r.cost_kr ?? (pct != null && r.value_kr != null ? Math.round(r.value_kr * (1 - pct / 100)) : null);
+  const wrapFee = Number(await getSetting('indpakning_kr')) || 30;
+  const lineTotal = (r: (typeof settle)[number]) => (unit(r) ?? 0) * r.received + wrapFee * r.wrapped;
   const shops = [...new Set(settle.map((s) => s.shop))];
   const pending = invoices.filter((i) => !i.invoiced_at);
   const held = invoices.filter((i) => i.hold);
   const unpaid = invoices.filter((i) => i.invoiced_at && !i.paid_at);
   const limit = await getSetting('forudbetaling_graense_kr');
-  const costTotal = settle.reduce((s, r) => s + (unit(r) ?? 0) * r.received, 0);
+  const costTotal = settle.reduce((s, r) => s + lineTotal(r), 0);
 
   return (
     <Shell area="Admin" nav={adminNav} active="/admin/afregning">
@@ -276,16 +279,17 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
                   <th className="num">Valgt</th>
                   <th className="num">Modtaget</th>
                   <th className="num">Indkøbspris</th>
+                  <th className="num">Indpakket</th>
                   <th className="num">Til betaling</th>
                 </tr>
               </thead>
               <tbody>
                 {shops.map((shop) => {
                   const rows = settle.filter((r) => r.shop === shop);
-                  const sum = rows.reduce((s, r) => s + (unit(r) ?? 0) * r.received, 0);
+                  const sum = rows.reduce((s, r) => s + lineTotal(r), 0);
                   return [
                     <tr key={shop} style={{ background: 'var(--cream)' }}>
-                      <td colSpan={4}>
+                      <td colSpan={5}>
                         <b>{shop}</b> <span className="small muted">CVR {rows[0].cvr || '–'}</span>
                       </td>
                       <td className="num">
@@ -300,7 +304,8 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
                         <td className="num">{r.n}</td>
                         <td className="num">{r.received}</td>
                         <td className="num">{unit(r) != null ? kr(unit(r)) : 'aftales'}</td>
-                        <td className="num">{unit(r) != null ? kr((unit(r) ?? 0) * r.received) : '–'}</td>
+                        <td className="num small">{r.wrapped ? `${r.wrapped} × ${kr(wrapFee)}` : '–'}</td>
+                        <td className="num">{unit(r) != null ? kr(lineTotal(r)) : '–'}</td>
                       </tr>
                     )),
                   ];

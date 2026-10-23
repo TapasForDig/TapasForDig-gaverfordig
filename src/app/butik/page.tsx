@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Badge, Notice, Shell } from '@/components/ui';
 import { logEvent, one, q } from '@/lib/db';
-import { dato, datoTid, daysLeft } from '@/lib/format';
+import { dato, datoTid, daysLeft, kr as fmtKr } from '@/lib/format';
 import { activeSeason, getSetting } from '@/lib/gifts';
 import { shopNav } from './nav';
 import { myShop } from './shop';
@@ -21,6 +21,7 @@ interface Line {
   n: number;
   companies: string;
   received: number;
+  wrap: number;
 }
 
 async function markHanded(fd: FormData) {
@@ -35,7 +36,8 @@ async function markHanded(fd: FormData) {
 export default async function ShopHome({ searchParams }: { searchParams: Promise<{ butik?: string; m?: string }> }) {
   const sp = await searchParams;
   const { shop, shops } = await myShop(sp.butik);
-  const [season, dropAddr] = await Promise.all([activeSeason(), getSetting('logistik_adresse')]);
+  const [season, dropAddr, wrapSetting] = await Promise.all([activeSeason(), getSetting('logistik_adresse'), getSetting('indpakning_kr')]);
+  const wrapFee = Number(wrapSetting) || 30;
   const handoffs = await q<Handoff>(
     `select h.id, h.code, h.handed_at, h.received_at, h.dropoff_deadline, (select count(*)::int from recipients r where r.handoff_id = h.id) as n
        from handoffs h where h.shop_id = $1 order by h.created_at desc`,
@@ -43,7 +45,7 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
   );
   const lines = await q<Line>(
     `select r.handoff_id, p.name as product, count(*)::int as n, string_agg(distinct c.name, ', ') as companies,
-            count(r.received_at)::int as received
+            count(r.received_at)::int as received, count(*) filter (where o.wrapping)::int as wrap
        from recipients r join products p on p.id = r.chosen_product_id
        join gift_orders o on o.id = r.order_id join companies c on c.id = o.company_id
       where p.shop_id = $1 and r.handoff_id is not null
@@ -170,6 +172,11 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
                         </td>
                         <td className="num" style={{ fontSize: 20, fontWeight: 700 }}>
                           {l.n}
+                          {l.wrap > 0 && (
+                            <div>
+                              <Badge tone="wine">{l.wrap === l.n ? 'Alle' : l.wrap} gaveindpakkes</Badge>
+                            </div>
+                          )}
                         </td>
                         <td className="small muted">{l.companies}</td>
                         <td>
@@ -180,7 +187,10 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
                   </tbody>
                 </table>
               </div>
-              <div className="card-foot small muted">Gaverne afleveres i egen emballage. Logistikcentralen står for indpakning og navnemærkat.</div>
+              <div className="card-foot small muted">
+                Gaver markeret &quot;gaveindpakkes&quot; pakker du ind – du får {fmtKr(wrapFee)} ekskl. moms ekstra pr. stk. De øvrige afleveres i egen emballage. Logistikcentralen sætter
+                navnemærkat på.
+              </div>
             </section>
           );
         })}

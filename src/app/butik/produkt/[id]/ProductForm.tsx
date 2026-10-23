@@ -286,7 +286,7 @@ export default function ProductForm(props: Props) {
           </label>
           <label className="check">
             <input type="checkbox" name="wrapped" value="ja" defaultChecked={p?.wrap_ok} />
-            <span>Jeg afleverer varen i egen emballage eller gaveæske, så den kan tåle at blive pakket ind eller lagt i mulepose</span>
+            <span>Varen kan gaveindpakkes. Når kunden har valgt indpakning, pakker du selv ind og får 30 kr. ekstra pr. stk. Ellers afleveres den i egen emballage, så den kan ligge i en mulepose</span>
           </label>
           {kind === 'Mad og drikke' && (
             <label className="check">

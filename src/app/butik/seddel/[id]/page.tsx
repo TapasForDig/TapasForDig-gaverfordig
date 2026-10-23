@@ -14,8 +14,8 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
   const h = await one<{ id: number; code: string; dropoff_deadline: Date | null }>('select id, code, dropoff_deadline from handoffs where id = $1 and shop_id = $2', [Number(id), shop.id]);
   if (!h) notFound();
   const [season, dropAddr] = await Promise.all([activeSeason(), getSetting('logistik_adresse')]);
-  const lines = await q<{ product: string; company: string; n: number }>(
-    `select p.name as product, c.name as company, count(*)::int as n
+  const lines = await q<{ product: string; company: string; n: number; wrap: number }>(
+    `select p.name as product, c.name as company, count(*)::int as n, count(*) filter (where o.wrapping)::int as wrap
        from recipients r join products p on p.id = r.chosen_product_id
        join gift_orders o on o.id = r.order_id join companies c on c.id = o.company_id
       where r.handoff_id = $1 group by p.name, c.name order by p.name, c.name`,
@@ -47,6 +47,7 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
               <th>Produkt</th>
               <th>Virksomhed</th>
               <th className="num">Antal</th>
+              <th className="num">Heraf gaveindpakket</th>
               <th>Talt op</th>
             </tr>
           </thead>
@@ -58,6 +59,7 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
                 <td className="num">
                   <b>{l.n}</b>
                 </td>
+                <td className="num">{l.wrap ? <b>{l.wrap}</b> : '–'}</td>
                 <td>☐</td>
               </tr>
             ))}
