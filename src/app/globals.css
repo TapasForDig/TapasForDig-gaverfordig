@@ -307,3 +307,8 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .menu-pop { position: absolute; right: 0; top: 24px; z-index: 5; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-btn); padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; min-width: 150px; box-shadow: 0 6px 18px rgba(0,0,0,.08); }
 .menu-pop form { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .menu-pop .linkbtn { text-decoration: none; font-size: 14px; }
+.food-info { font-size: 12.5px; text-align: left; background: var(--warn-bg); color: #5a3d0a; border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.food-info a { color: inherit; }
+.food-info summary { cursor: pointer; font-weight: 600; }
+.food-info details p { margin-top: 6px; }
+.food-info .muted { color: #7a5c22; }

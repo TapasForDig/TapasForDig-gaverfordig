@@ -19,6 +19,9 @@ interface P {
   description: string;
   images: string;
   price_category_id: number;
+  kind: string;
+  ingredients: string | null;
+  net_content: string | null;
   shop_name: string;
   shop_town: string | null;
 }
@@ -32,7 +35,7 @@ export default async function OrderPage() {
     currentUser(),
   ]);
   const products = await q<P>(
-    `select p.id, p.name, p.description, p.images, p.price_category_id, s.name as shop_name, s.town as shop_town
+    `select p.id, p.name, p.description, p.images, p.price_category_id, p.kind, p.ingredients, p.net_content, s.name as shop_name, s.town as shop_town
        from products p join shops s on s.id = p.shop_id
       where p.status = 'approved' and s.status = 'approved'
         and p.stock > (select count(*) from recipients r where r.chosen_product_id = p.id)
@@ -44,7 +47,7 @@ export default async function OrderPage() {
       id: g.id,
       value: g.value_kr,
       note: g.note,
-      products: ps.map((p) => ({ id: p.id, name: p.name, shop: p.shop_name, town: p.shop_town, desc: p.description, img: images(p.images)[0] ?? null })),
+      products: ps.map((p) => ({ id: p.id, name: p.name, shop: p.shop_name, town: p.shop_town, desc: p.description, img: images(p.images)[0] ?? null, food: p.kind === 'Mad og drikke', ingredients: p.ingredients, net: p.net_content })),
     };
   });
 

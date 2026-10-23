@@ -6,7 +6,8 @@ import { currentRecipient, RECIPIENT_COOKIE_NAME } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { datoTid, KINDS, str } from '@/lib/format';
 import { normalizeCode } from '@/lib/purchase';
-import { getOrder, getProduct, giftsFor, type Season } from '@/lib/gifts';
+import { getOrder, getProduct, getSetting, giftsFor, type Season } from '@/lib/gifts';
+import { FoodInfo } from '@/components/FoodInfo';
 import { sendMail } from '@/lib/mail';
 
 const OPEN = ['confirmed', 'invited'];
@@ -131,6 +132,8 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
   const open = OPEN.includes(o.status) && !(deadline && deadline < new Date());
   const needInfo = open && (!r.name || (o.delivery_mode === 'home' && !r.address) || sp.ret === '1');
   const all = await giftsFor(o.price_category_id, r.chosen_product_id);
+  const [phone, mail] = await Promise.all([getSetting('kontakt_telefon'), getSetting('kontakt_email')]);
+  const contact = { phone: phone || '71 99 75 74', email: mail || 'mail@vinfordig.dk' };
   const kind = sp.k && (KINDS as readonly string[]).includes(sp.k) ? sp.k : 'Alle';
   const shown = kind === 'Alle' ? all : all.filter((p) => p.kind === kind);
   const kindsInUse = KINDS.filter((k) => all.some((p) => p.kind === k));
@@ -256,6 +259,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
                       </div>
                       <h3>{p.name}</h3>
                       <p className="desc">{p.description}</p>
+                      {p.kind === 'Mad og drikke' && <FoodInfo ingredients={p.ingredients} netContent={p.net_content} contact={contact} compact />}
                       {sel ? (
                         <span className="btn block" aria-disabled="true">
                           Valgt

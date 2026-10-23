@@ -46,6 +46,11 @@ export async function saveProduct(fd: FormData) {
   const normal = int(fd, 'normal_price');
   const stock = Math.max(0, int(fd, 'stock') ?? 0);
   const alcohol = fd.get('alcohol') === 'ja';
+  const food = kind === 'Mad og drikke';
+  const ingredients = food ? str(fd, 'ingredients').slice(0, 2000) || null : null;
+  const netContent = food ? str(fd, 'net_content').slice(0, 60) || null : null;
+  const wrapOk = fd.get('wrapped') === 'ja';
+  const shelfOk = fd.get('shelf') === 'ja';
   if (!name) back('!Produktet skal have et navn');
 
   let status = existing?.status ?? 'draft';
@@ -59,8 +64,10 @@ export async function saveProduct(fd: FormData) {
     if (!cat) problems.push('en prisgruppe');
     if (cat && (normal == null || normal < Math.round(cat.value_kr * 1.25))) problems.push(`en normal udsalgspris på mindst ${kr(Math.round(cat.value_kr * 1.25))} inkl. moms`);
     if (stock < 1) problems.push('et antal på mindst 1');
-    if (fd.get('wrapped') !== 'ja') problems.push('bekræftelse af gaveemballage');
-    if (kind === 'Mad og drikke' && fd.get('shelf') !== 'ja') problems.push('bekræftelse af holdbarhed');
+    if (!wrapOk) problems.push('bekræftelse af gaveemballage');
+    if (food && !shelfOk) problems.push('bekræftelse af holdbarhed');
+    if (food && (ingredients ?? '').length < 10) problems.push('ingrediensliste med allergener');
+    if (food && !netContent) problems.push('nettoindhold');
     if (problems.length) {
       // Gem alligevel som kladde, så intet går tabt
       status = existing?.status === 'approved' ? 'pending' : existing?.status === 'paused' ? 'paused' : 'draft';
@@ -84,17 +91,18 @@ export async function saveProduct(fd: FormData) {
   async function persist(): Promise<number> {
     if (isNew) {
       const r = await one<{ id: number }>(
-        `insert into products (shop_id, name, description, kind, price_category_id, normal_price_kr, stock, alcohol, images, status)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`,
-        [shop.id, name, description, kind, catId, normal, stock, alcohol, JSON.stringify(all), status],
+        `insert into products (shop_id, name, description, kind, price_category_id, normal_price_kr, stock, alcohol, images, status, ingredients, net_content, wrap_ok, shelf_ok)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) returning id`,
+        [shop.id, name, description, kind, catId, normal, stock, alcohol, JSON.stringify(all), status, ingredients, netContent, wrapOk, shelfOk],
       );
       return r!.id;
     }
     await q(
       `update products set name=$1, description=$2, kind=$3, price_category_id=$4, normal_price_kr=$5, stock=$6, alcohol=$7, images=$8,
-              status=$9, review_note = case when $9 = 'pending' then null else review_note end, updated_at = now()
+              status=$9, review_note = case when $9 = 'pending' then null else review_note end, updated_at = now(),
+              ingredients=$11, net_content=$12, wrap_ok=$13, shelf_ok=$14
         where id = $10`,
-      [name, description, kind, catId, normal, stock, alcohol, JSON.stringify(all), status, Number(id)],
+      [name, description, kind, catId, normal, stock, alcohol, JSON.stringify(all), status, Number(id), ingredients, netContent, wrapOk, shelfOk],
     );
     return Number(id);
   }
@@ -119,8 +127,9 @@ export async function productAction(fd: FormData) {
   }
   if (what === 'copy') {
     const r = await one<{ id: number }>(
-      `insert into products (shop_id, name, description, kind, price_category_id, normal_price_kr, stock, alcohol, images, status)
-       select shop_id, left('Kopi af ' || name, 60), description, kind, price_category_id, normal_price_kr, stock, alcohol, images, 'draft' from products where id = $1
+      `insert into products (shop_id, name, description, kind, price_category_id, normal_price_kr, stock, alcohol, images, status, ingredients, net_content, wrap_ok, shelf_ok)
+       select shop_id, left('Kopi af ' || name, 60), description, kind, price_category_id, normal_price_kr, stock, alcohol, images, 'draft', ingredients, net_content, wrap_ok, shelf_ok
+         from products where id = $1
        returning id`,
       [p!.id],
     );

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Badge, Notice, Shell } from '@/components/ui';
 import { images, KINDS } from '@/lib/format';
-import { categories, getProduct, PRODUCT_STATUS } from '@/lib/gifts';
+import { categories, getProduct, getSetting, PRODUCT_STATUS } from '@/lib/gifts';
 import { shopNav } from '../../nav';
 import { myShop } from '../../shop';
 import { saveProduct } from './actions';
@@ -13,7 +13,7 @@ export default async function ProductGuide({ params, searchParams }: { params: P
   const { shop, shops } = await myShop(sp.butik);
   const p = id === 'ny' ? undefined : await getProduct(Number(id));
   if (id !== 'ny' && (!p || p.shop_id !== shop.id)) notFound();
-  const cats = await categories();
+  const [cats, phone, mail] = await Promise.all([categories(), getSetting('kontakt_telefon'), getSetting('kontakt_email')]);
   const q0 = shops ? `?butik=${shop.id}` : '';
 
   return (
@@ -38,10 +38,13 @@ export default async function ProductGuide({ params, searchParams }: { params: P
           kinds={KINDS}
           groups={cats.map((c) => ({ id: c.id, value: c.value_kr }))}
           backHref={`/butik/produkter${q0}`}
+          contact={{ phone: phone || '71 99 75 74', email: mail || 'mail@vinfordig.dk' }}
           product={
             p
               ? {
                   name: p.name,
+                  ingredients: p.ingredients,
+                  net_content: p.net_content,
                   description: p.description,
                   kind: p.kind,
                   price_category_id: p.price_category_id,
@@ -49,7 +52,8 @@ export default async function ProductGuide({ params, searchParams }: { params: P
                   stock: p.stock,
                   alcohol: p.alcohol,
                   images: images(p.images),
-                  submitted: p.status !== 'draft',
+                  wrap_ok: p.wrap_ok || p.status !== 'draft',
+                  shelf_ok: p.shelf_ok || p.status !== 'draft',
                 }
               : undefined
           }

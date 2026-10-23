@@ -6,6 +6,7 @@ import { appUrl, images, int, kr, str } from '@/lib/format';
 import { categories, getProduct, productsByStatus } from '@/lib/gifts';
 import { sendMail } from '@/lib/mail';
 import { adminNav } from '../nav';
+import { FoodInfo } from '@/components/FoodInfo';
 
 async function decideShop(fd: FormData) {
   'use server';
@@ -102,6 +103,12 @@ export default async function Approve({ searchParams }: { searchParams: Promise<
                     <div className="eyebrow">{p.shop_name}</div>
                     <h3>{p.name}</h3>
                     <p className="desc">{p.description}</p>
+                    {p.kind === 'Mad og drikke' &&
+                      (p.ingredients ? (
+                        <FoodInfo ingredients={p.ingredients} netContent={p.net_content} contact={{ phone: '–', email: '–' }} />
+                      ) : (
+                        <div className="alert bad small">Mangler ingredienser og allergener</div>
+                      ))}
                     <div className="small">
                       {p.kind} · {cat ? `${cat.name} (${kr(cat.value_kr)})` : 'ingen kategori'} · normalpris {kr(p.normal_price_kr)} · lager {p.stock}
                       {p.alcohol ? ' · alkohol' : ''} · {imgs.length} billeder

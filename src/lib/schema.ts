@@ -222,6 +222,11 @@ alter table recipients add column if not exists phone text;
 
 alter table handoffs add column if not exists dropoff_deadline timestamptz;
 
+alter table products add column if not exists ingredients text;
+alter table products add column if not exists net_content text;
+alter table products add column if not exists wrap_ok boolean not null default false;
+alter table products add column if not exists shelf_ok boolean not null default false;
+
 create index if not exists recipients_order_idx on recipients(order_id);
 create index if not exists gift_orders_purchase_idx on gift_orders(purchase_id);
 create index if not exists recipients_product_idx on recipients(chosen_product_id);

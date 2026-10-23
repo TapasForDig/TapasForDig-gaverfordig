@@ -119,6 +119,13 @@ export async function seedIfEmpty(d: Driver) {
   await prod(tfd.id, 'Lille delikatessegave', 'Pesto, oliven og kiks fra vores egenimport.', 'Mad og drikke', cats[300], 80);
   await prod(inter.id, 'Plaid i uld (demo)', 'Eksempelprodukt. Venter på godkendelse.', 'Bolig', cats[800], 10, false, 'pending');
 
+  // Demo: fødevareoplysninger på mad og drikke
+  await d.query(
+    `update products set ingredients = case when alcohol then 'Vin: druer, SULFITTER.' else 'Pesto: basilikum, olivenolie, PINJEKERNER, PARMESAN (MÆLK), hvidløg, salt. Oliven: grønne oliven, vand, salt. Kiks: HVEDEMEL, smør (MÆLK), sukker, salt.' end,
+            net_content = case when alcohol then '3 × 75 cl' else 'ca. 600 g' end
+      where kind = 'Mad og drikke'`,
+  );
+
   const company = await ins(
     `insert into companies (name, cvr, address, town, contact_name, phone, email) values
      ('Demovirksomhed A/S','[CVR]','[Adresse]','Vejen','[Kontaktperson]','[Telefon]','virksomhed@demo.dk') returning id`,

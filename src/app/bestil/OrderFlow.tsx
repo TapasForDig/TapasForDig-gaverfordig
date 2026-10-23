@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { useActionState, useEffect, useMemo, useState } from 'react';
 import type { OrderState } from './actions';
 import { Icon } from '@/components/Icon';
+import { FoodInfo } from '@/components/FoodInfo';
 
 export interface GroupView {
   id: number;
   value: number;
   note: string | null;
-  products: { id: number; name: string; shop: string; town: string | null; desc: string; img: string | null }[];
+  products: { id: number; name: string; shop: string; town: string | null; desc: string; img: string | null; food: boolean; ingredients: string | null; net: string | null }[];
 }
 interface WeekView {
   key: string;
@@ -510,6 +511,7 @@ export default function OrderFlow({
                         </div>
                         <h3>{p.name}</h3>
                         <p className="desc">{p.desc}</p>
+                        {p.food && <FoodInfo ingredients={p.ingredients} netContent={p.net} contact={contact} compact />}
                       </div>
                     </article>
                   ))}

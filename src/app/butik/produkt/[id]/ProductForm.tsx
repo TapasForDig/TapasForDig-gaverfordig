@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { FoodInfo } from '@/components/FoodInfo';
 
 interface Props {
   action: (fd: FormData) => Promise<void>;
@@ -12,7 +13,10 @@ interface Props {
   kinds: readonly string[];
   groups: { id: number; value: number }[];
   backHref: string;
+  contact: { phone: string; email: string };
   product?: {
+    ingredients: string | null;
+    net_content: string | null;
     name: string;
     description: string;
     kind: string;
@@ -21,7 +25,8 @@ interface Props {
     stock: number;
     alcohol: boolean;
     images: string[];
-    submitted: boolean;
+    wrap_ok: boolean;
+    shelf_ok: boolean;
   };
 }
 
@@ -60,6 +65,9 @@ export default function ProductForm(props: Props) {
   const [kind, setKind] = useState(p?.kind && props.kinds.includes(p.kind) ? p.kind : '');
   const [cat, setCat] = useState<number | null>(p?.price_category_id ?? null);
   const [price, setPrice] = useState(p?.normal_price_kr ? String(p.normal_price_kr) : '');
+  const [ingredients, setIngredients] = useState(p?.ingredients ?? '');
+  const [netContent, setNetContent] = useState(p?.net_content ?? '');
+  const food = kind === 'Mad og drikke';
   const [items, setItems] = useState<Item[]>((p?.images ?? []).map((src) => ({ src })));
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
@@ -120,6 +128,7 @@ export default function ProductForm(props: Props) {
     [desc.trim().length >= 120, `Beskrivelse på mindst 120 tegn (${desc.trim().length})`],
     [!!kind, 'Kategori'],
     [!!chosen && !priceWarn && priceNum > 0, 'Prisgruppe og udsalgspris'],
+    ...(food ? ([[ingredients.trim().length >= 10 && !!netContent.trim(), 'Ingredienser, allergener og nettoindhold']] as const) : []),
   ] as const;
 
   return (
@@ -191,6 +200,31 @@ export default function ProductForm(props: Props) {
               ))}
             </select>
           </div>
+          {food && (
+            <div className="stack-s food-fields">
+              <div className="alert warn">
+                Mad og drikke: Ingredienser og allergener skal kunne ses, før medarbejderen vælger gaven. Hos medarbejderen står der desuden, at gaven pakkes først ved bestilling, og at man kan
+                kontakte Gaver For Dig om allergener.
+              </div>
+              <div className="field">
+                <label htmlFor="ingredients">Ingredienser og allergener *</label>
+                <textarea
+                  id="ingredients"
+                  name="ingredients"
+                  maxLength={2000}
+                  value={ingredients}
+                  onChange={(e) => setIngredients(e.target.value)}
+                  placeholder={'Fx: Pesto: basilikum, olivenolie, PINJEKERNER, PARMESAN (MÆLK), hvidløg, salt.\nOliven: grønne oliven, vand, salt.'}
+                  style={{ minHeight: 120 }}
+                />
+                <span className="hint">Skriv ingredienslisten for hver vare i gaven, som den står på pakken. Skriv allergener med STORE BOGSTAVER.</span>
+              </div>
+              <div className="field">
+                <label htmlFor="net_content">Nettoindhold *</label>
+                <input id="net_content" name="net_content" type="text" maxLength={60} value={netContent} onChange={(e) => setNetContent(e.target.value)} placeholder="Fx 2 × 75 cl eller 450 g" style={{ maxWidth: 320 }} />
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="section">
@@ -248,12 +282,12 @@ export default function ProductForm(props: Props) {
             <span>Varen indeholder alkohol (vises kun for medarbejdere, der bekræfter at være fyldt 18 år)</span>
           </label>
           <label className="check">
-            <input type="checkbox" name="wrapped" value="ja" defaultChecked={p?.submitted} />
+            <input type="checkbox" name="wrapped" value="ja" defaultChecked={p?.wrap_ok} />
             <span>Jeg afleverer varen i egen emballage eller gaveæske, så den kan tåle at blive pakket ind eller lagt i mulepose</span>
           </label>
           {kind === 'Mad og drikke' && (
             <label className="check">
-              <input type="checkbox" name="shelf" value="ja" defaultChecked={p?.submitted} />
+              <input type="checkbox" name="shelf" value="ja" defaultChecked={p?.shelf_ok} />
               <span>Varen holder mindst 3 måneder ved aflevering og skal ikke på køl</span>
             </label>
           )}
@@ -282,6 +316,7 @@ export default function ProductForm(props: Props) {
               </div>
               <h3>{name || 'Produktnavn'}</h3>
               <p className="desc">{desc ? (desc.length > 180 ? desc.slice(0, 180) + ' …' : desc) : 'Beskrivelsen vises her.'}</p>
+              {food && <FoodInfo ingredients={ingredients || null} netContent={netContent || null} contact={props.contact} compact />}
               <span className="btn outline block" aria-hidden="true">
                 Vælg denne gave
               </span>

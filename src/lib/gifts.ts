@@ -19,6 +19,10 @@ export interface Product {
   status: string;
   review_note: string | null;
   cost_kr: number | null;
+  ingredients: string | null;
+  net_content: string | null;
+  wrap_ok: boolean;
+  shelf_ok: boolean;
   chosen: number;
 }
 
