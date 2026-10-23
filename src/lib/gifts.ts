@@ -95,7 +95,12 @@ const PRODUCT_SELECT = `
     from products p join shops s on s.id = p.shop_id`;
 
 export async function activeSeason(): Promise<Season | undefined> {
-  return one<Season>('select * from seasons where active order by id desc limit 1');
+  const s = await one<Season>('select * from seasons where active order by id desc limit 1');
+  if (s) return s;
+  // Ingen sæson endnu (fx en ny database uden demodata): opret årets julesæson.
+  // Frister styres pr. bestilling ud fra leveringsugen, så sæsonen behøver ingen datoer.
+  const year = Number(new Date().toLocaleString('en-US', { timeZone: 'Europe/Copenhagen', year: 'numeric' }));
+  return one<Season>(`insert into seasons (name) values ($1) returning *`, [`Jul ${year}`]);
 }
 
 export async function categories(): Promise<Category[]> {
