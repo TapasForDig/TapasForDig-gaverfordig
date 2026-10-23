@@ -49,6 +49,15 @@ export default async function ShopHelp({ searchParams }: { searchParams: Promise
     <Shell area={`Butik · ${shop.name}`} nav={shopNav.map((n) => ({ ...n, href: n.href + q0 }))} active={`/butik/hjaelp${q0}`}>
       <div className="stack">
         <h1>Hjælp og guides</h1>
+        <a href="/billedguide" className="card row between" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <span>
+            <b>Billedguide</b>
+            <span className="small muted" style={{ display: 'block' }}>
+              Mål, baggrund, lys og eksempler på gode og dårlige billeder
+            </span>
+          </span>
+          <span className="btn small">Åbn guiden</span>
+        </a>
         <div className="tiles">
           {guides.map((g) => (
             <section key={g.title} className="card stack-s">

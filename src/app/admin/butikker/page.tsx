@@ -19,6 +19,7 @@ Vi har oprettet ${shop} i butiksportalen. Her opretter du de gaver, som lokale v
 1. Vælg din adgangskode her (linket virker i 14 dage):
    ${link}
 2. Opret dine gaver under "Mine produkter" – det tager ca. 10 minutter pr. gave, og billederne kan tages med telefonen.
+   Se billedguiden her: ${appUrl()}/billedguide
 3. Vi godkender gaverne inden for 2 hverdage.
 
 Har du spørgsmål, så svar bare på denne mail.

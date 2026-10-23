@@ -55,7 +55,7 @@ async function shrink(file: File): Promise<Item> {
   ctx.drawImage(bmp, 0, 0, w, h);
   const blob: Blob = await new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error('Billedet kunne ikke læses'))), 'image/jpeg', 0.85));
   const out = new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' });
-  return { file: out, src: URL.createObjectURL(blob), small: Math.min(bmp.width, bmp.height) < 1000 };
+  return { file: out, src: URL.createObjectURL(blob), small: Math.min(bmp.width, bmp.height) < 1200 };
 }
 
 export default function ProductForm(props: Props) {
@@ -141,7 +141,11 @@ export default function ProductForm(props: Props) {
         <section className="section" style={{ borderTop: 0, paddingTop: 0 }}>
           <h2>1 · Billeder</h2>
           <div className="req">
-            1–5 billeder på lys, rolig baggrund, hvor hele produktet kan ses. Tag dem gerne med telefonen – vi gør dem klar automatisk. Det første billede er hovedbilledet.
+            Kvadratiske billeder, gerne 1600 × 1600 px (mindst 1200 × 1200), på lys, rolig baggrund, hvor hele gaven kan ses. Tag dem gerne med telefonen – vi gør dem klar
+            automatisk. Det første billede er hovedbilledet.{' '}
+            <a href="/billedguide" target="_blank">
+              Se billedguiden
+            </a>
           </div>
           <div className="img-grid">
             {items.map(({ src, small }, i) => (

@@ -1,12 +1,21 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { PublicHeader } from '@/components/ui';
-import { categories } from '@/lib/gifts';
+import { categories, getSetting } from '@/lib/gifts';
 import { kr } from '@/lib/format';
 import { deliveryWeeks, incl, shopSettings } from '@/lib/purchase';
 
 export default async function Home() {
-  const [cats, s] = await Promise.all([categories(), shopSettings()]);
+  const [cats, s, hero, img1, img2, img3, title, intro] = await Promise.all([
+    categories(),
+    shopSettings(),
+    getSetting('forside_hero_billede'),
+    getSetting('forside_fritvalg_billede'),
+    getSetting('forside_webshop_billede'),
+    getSetting('forside_gaveaesker_billede'),
+    getSetting('forside_overskrift'),
+    getSetting('forside_undertekst'),
+  ]);
   const next = deliveryWeeks(s).find((w) => w.available);
   const demo = process.env.NO_DEMO !== '1';
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' });
@@ -17,9 +26,9 @@ export default async function Home() {
       <section className="hero">
         <div style={{ flex: '1 1 520px' }} className="stack-s">
           <div className="eyebrow">Firmagaver fra Vejen Kommune</div>
-          <h1>Giv en gave, der bliver i lokalsamfundet</h1>
+          <h1>{title || 'Giv en gave, der bliver i lokalsamfundet'}</h1>
           <p className="muted" style={{ fontSize: 17, maxWidth: 620 }}>
-            Jeres medarbejdere vælger selv deres gave blandt varer fra lokale butikker. Vi samler, pakker med navn og leverer det hele til jer.
+            {intro || 'Jeres medarbejdere vælger selv deres gave blandt varer fra lokale butikker. Vi samler, pakker med navn og leverer det hele til jer.'}
           </p>
           <div className="row" style={{ marginTop: 8 }}>
             <Link href="/bestil" className="btn">
@@ -30,8 +39,13 @@ export default async function Home() {
             </Link>
           </div>
         </div>
+        {hero && (
+          <div className="hero-img">
+            <img src={hero} alt="" />
+          </div>
+        )}
         {next && (
-          <div className="card" style={{ minWidth: 240 }}>
+          <div className={`card ${hero ? 'hero-badge' : ''}`} style={{ minWidth: 240 }}>
             <div className="eyebrow">Næste levering · uge {next.week}</div>
             <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>Bestil inden {fmt(next.chooseDeadline)}</div>
             <div className="small muted">Leveres senest {fmt(next.deliveryDate + 'T12:00:00Z')}</div>
@@ -45,7 +59,7 @@ export default async function Home() {
           <div className="paths">
             <div className="path">
               <div className="visual" style={{ background: 'var(--green)' }}>
-                <Icon name="gift" size={72} />
+                {img1 ? <img src={img1} alt="" /> : <Icon name="gift" size={72} />}
               </div>
               <h3>Giv medarbejderne frit valg</h3>
               <p>Vælg gavebeløb – vi sender gavekoder, og hver medarbejder vælger sin gave fra lokale butikker. Vi klarer resten.</p>
@@ -57,7 +71,7 @@ export default async function Home() {
             </div>
             <div className="path">
               <div className="visual" style={{ background: 'var(--wine)' }}>
-                <Icon name="bag" size={72} />
+                {img2 ? <img src={img2} alt="" /> : <Icon name="bag" size={72} />}
               </div>
               <h3>I vælger selv i webshoppen</h3>
               <p>Gå på opdagelse i butikkernes udvalg og vælg selv gaverne til jeres medarbejdere.</p>
@@ -67,7 +81,7 @@ export default async function Home() {
             </div>
             <div className="path">
               <div className="visual" style={{ background: 'var(--green-dark)' }}>
-                <Icon name="calendar" size={72} />
+                {img3 ? <img src={img3} alt="" /> : <Icon name="calendar" size={72} />}
               </div>
               <h3>Gaveæsker &amp; julekalendere</h3>
               <p>Lokale lækkerier samlet i gaveæsker og julekalendere – klar til at give videre.</p>
