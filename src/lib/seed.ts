@@ -10,20 +10,16 @@ const inDays = (n: number) => new Date(Date.now() + n * 86400000);
 
 // Fylder en tom database med demo-data, så alle portaler kan prøves med det samme.
 // Slås fra med NO_DEMO=1 (så oprettes kun en admin ud fra ADMIN_EMAIL / ADMIN_PASSWORD).
-// Sørger for at admin fra ADMIN_EMAIL / ADMIN_PASSWORD altid findes og har den adgangskode,
-// der står i miljøvariablerne. Ændrer man ADMIN_PASSWORD i Vercel og deployer igen, virker den nye kode.
+// Opretter admin fra ADMIN_EMAIL / ADMIN_PASSWORD, hvis den ikke findes
 async function ensureAdmin(d: Driver) {
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const pw = process.env.ADMIN_PASSWORD?.trim();
   if (!email || !pw) return;
   const u = (await d.query<{ id: number; password_hash: string }>('select id, password_hash from users where email = $1', [email])).rows[0];
+  // Kun oprettelse her (billigt). Passer koden ikke, retter login-siden den, når man logger ind med koden fra Vercel.
   if (!u) {
     await d.query(`insert into users (email, password_hash, name, role) values ($1,$2,'Admin','admin') on conflict (email) do nothing`, [email, hash(pw)]);
-    return;
   }
-  const [salt, h] = u.password_hash.split(':');
-  const same = salt && h && crypto.scryptSync(pw, salt, 64).toString('hex') === h;
-  if (!same) await d.query(`update users set password_hash = $1, role = 'admin' where id = $2`, [hash(pw), u.id]);
 }
 
 export async function seedIfEmpty(d: Driver) {

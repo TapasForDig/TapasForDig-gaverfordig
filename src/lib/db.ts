@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { SCHEMA } from './schema';
@@ -50,8 +51,19 @@ export function db(): Promise<Driver> {
   if (!g.__gfdDb) {
     g.__gfdDb = (async () => {
       const d = await createDriver();
-      await d.exec(SCHEMA);
-      await seedIfEmpty(d);
+      // Skemaet køres kun, når det er ændret siden sidst – sparer tid ved hver kold start på Vercel
+      const version = crypto.createHash('sha1').update(SCHEMA).digest('hex').slice(0, 12);
+      let current: string | undefined;
+      try {
+        current = (await d.query<{ value: string }>(`select value from settings where key = 'schema_version'`)).rows[0]?.value;
+      } catch {
+        current = undefined; // tabellen findes ikke endnu
+      }
+      if (current !== version) {
+        await d.exec(SCHEMA);
+        await d.query(`insert into settings (key, value) values ('schema_version', $1) on conflict (key) do update set value = excluded.value`, [version]);
+        await seedIfEmpty(d);
+      }
       return d;
     })().catch((e) => {
       g.__gfdDb = undefined;
