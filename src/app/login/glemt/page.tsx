@@ -5,13 +5,16 @@ import { newToken } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { appUrl, str } from '@/lib/format';
 import { sendMail } from '@/lib/mail';
+import { clientIp, tooMany } from '@/lib/ratelimit';
 
 const SENT = 'Hvis e-mailen findes hos os, har vi sendt et link til at vælge en ny adgangskode. Linket virker i 1 time.';
 
 async function requestReset(fd: FormData) {
   'use server';
   const email = str(fd, 'email').toLowerCase();
-  const u = await one<{ id: number }>('select id from users where email = $1', [email]);
+  // Højst 3 mails pr. adresse og 10 pr. IP i timen, så siden ikke kan bruges til at oversvømme nogen med mails
+  const limited = (await tooMany(`glemt:${email}`, 3, 3600)) || (await tooMany(`glemt-ip:${await clientIp()}`, 10, 3600));
+  const u = limited ? undefined : await one<{ id: number }>('select id from users where email = $1', [email]);
   if (u) {
     const token = newToken(32);
     await q(`insert into password_resets (token, user_id, expires_at) values ($1,$2, now() + interval '1 hour')`, [token, u.id]);

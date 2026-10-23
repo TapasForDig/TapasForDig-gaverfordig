@@ -24,6 +24,7 @@ export async function runCleanup(actor = 'system'): Promise<CleanupResult> {
   const mails = await q<{ id: number }>(`delete from outbox where created_at < now() - interval '${OUTBOX_MONTHS} months' returning id`);
   const sess = await q<{ token: string }>(`delete from sessions where expires_at < now() returning token`);
   await q(`delete from password_resets where expires_at < now() - interval '7 days'`);
+  await q(`delete from rate_hits where at < now() - interval '1 day'`);
   if (rec.length || mails.length) await logEvent(actor, 'oprydning', null, 'persondata slettet', `${rec.length} medarbejdere anonymiseret, ${mails.length} mails slettet`);
   await q(`insert into settings (key, value) values ('oprydning_sidst', now()::text) on conflict (key) do update set value = excluded.value`);
   return { recipients: rec.length, mails: mails.length, sessions: sess.length };

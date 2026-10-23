@@ -58,6 +58,8 @@ export default function OrderFlow({
   const [week, setWeek] = useState<string>('');
   const [modal, setModal] = useState<GroupView | null>(null);
   const [state, formAction, pending] = useActionState(action, {});
+  // Unik nøgle pr. bestillingsforløb, så et dobbeltklik ikke giver to bestillinger
+  const [submitKey] = useState(() => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Math.random()).slice(2) + Date.now()));
 
   // Husk kurven, hvis siden genindlæses
   useEffect(() => {
@@ -312,6 +314,7 @@ export default function OrderFlow({
           {step === 4 && (
             <form action={formAction} id="checkout" className="stack" noValidate={false}>
               <input type="hidden" name="lines" value={JSON.stringify(lines.map((l) => ({ groupId: l.g.id, qty: l.n })))} />
+              <input type="hidden" name="submit_key" value={submitKey} />
               <input type="hidden" name="mode" value={mode} />
               <input type="hidden" name="wrapping" value={wrapping ? '1' : '0'} />
               <input type="hidden" name="codes" value={codes} />

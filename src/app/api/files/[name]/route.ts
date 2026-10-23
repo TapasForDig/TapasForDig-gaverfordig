@@ -11,6 +11,6 @@ export async function GET(_req: Request, ctx: { params: Promise<{ name: string }
   if (!fs.existsSync(file)) return new Response('Ikke fundet', { status: 404 });
   const ext = name.split('.').pop() as string;
   return new Response(fs.readFileSync(file), {
-    headers: { 'Content-Type': TYPES[ext], 'Cache-Control': 'public, max-age=31536000, immutable' },
+    headers: { 'Content-Type': TYPES[ext], 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' },
   });
 }

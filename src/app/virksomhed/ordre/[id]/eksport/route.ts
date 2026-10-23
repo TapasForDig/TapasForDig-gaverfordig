@@ -2,7 +2,11 @@ import { currentUser } from '@/lib/auth';
 import { q } from '@/lib/db';
 import { getOrder } from '@/lib/gifts';
 
-const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+// Felter, der starter med = + - @, ville Excel ellers køre som formler
+const cell = (v: unknown) => {
+  const s = String(v ?? '');
+  return `"${(/^[=+\-@\t\r]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
+};
 
 // CSV (semikolon, til dansk Excel) over hvem der har valgt hvad
 export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {

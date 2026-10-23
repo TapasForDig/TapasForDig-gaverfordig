@@ -356,11 +356,18 @@ export async function assignRecipients(purchaseId: number, text: string, actor: 
 // ---------- Afventer betaling ----------
 
 // Nye kunder over grænsen betaler forud: koderne holdes tilbage, til betalingen er registreret.
-export async function needsPrepayment(companyId: number, totalInc: number, excludePurchase: number): Promise<boolean> {
+export async function needsPrepayment(companyId: number, totalInc: number, excludePurchase: number, cvr: string | null = null): Promise<boolean> {
   const limit = Number((await one<{ value: string }>(`select value from settings where key = 'forudbetaling_graense_kr'`))?.value || 0);
-  if (!limit || totalInc < limit) return false;
+  if (!limit) return false;
   const paidBefore = await one(`select 1 from purchases where company_id = $1 and paid_at is not null and id <> $2`, [companyId, excludePurchase]);
-  return !paidBefore;
+  if (paidBefore) return false;
+  // Tæl også andre ubetalte bestillinger fra samme virksomhed eller CVR med, så grænsen ikke kan omgås ved at dele ordren op
+  const open = await one<{ sum: number }>(
+    `select coalesce(sum(total_inc), 0)::int as sum from purchases
+      where id <> $1 and paid_at is null and (company_id = $2 or ($3::text is not null and cvr = $3))`,
+    [excludePurchase, companyId, cvr],
+  );
+  return totalInc + (open?.sum ?? 0) >= limit;
 }
 
 // Frigiver koderne: sender kodemail eller invitationer til de medarbejdere, der allerede er tilknyttet.

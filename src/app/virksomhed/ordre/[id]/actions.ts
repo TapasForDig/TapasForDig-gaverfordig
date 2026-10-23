@@ -14,6 +14,8 @@ async function own(fd: FormData): Promise<{ u: User; o: Order }> {
   const u = await requireRole('virksomhed');
   const o = await getOrder(Number(fd.get('order')));
   if (!o || (u.role !== 'admin' && o.company_id !== u.company_id)) redirect('/virksomhed');
+  // Bestillinger via gavekort (/bestil) styres fra bestillingssiden – de gamle handlinger må ikke tilføje modtagere til dem
+  if (o.purchase_id) redirect(`/virksomhed/bestilling/${o.purchase_id}`);
   return { u, o };
 }
 
@@ -79,6 +81,7 @@ export async function removeRecipient(fd: FormData) {
 
 export async function saveDelivery(fd: FormData) {
   const { o } = await own(fd);
+  if (!['draft', 'confirmed', 'invited'].includes(o.status)) back(o.id, '!Leveringen kan ikke ændres, når gaverne er pakket');
   await q('update gift_orders set delivery_address = $1, delivery_contact = $2, delivery_note = $3 where id = $4', [
     str(fd, 'address'),
     str(fd, 'contact'),

@@ -2,7 +2,11 @@ import { currentUser } from '@/lib/auth';
 import { q } from '@/lib/db';
 import { getOrder } from '@/lib/gifts';
 
-const cell = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+// Felter, der starter med = + - @, ville Excel ellers køre som formler
+const cell = (v: unknown) => {
+  const s = String(v ?? '');
+  return `"${(/^[=+\-@\t\r]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
+};
 
 // Fil med modtageradresser til import i Shipmondo (Forsendelser → Importér).
 // Kolonnenavnene matches i Shipmondos importguide første gang; derefter huskes opsætningen.

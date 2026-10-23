@@ -1,7 +1,11 @@
+import { currentUser } from '@/lib/auth';
 import { one, q } from '@/lib/db';
 
-// Fejlsøgning af opsætningen. Viser kun ja/nej – aldrig værdier eller nøgler.
-export async function GET() {
+// Fejlsøgning af opsætningen. Kun for admin (eller med CRON_SECRET). Viser kun ja/nej – aldrig værdier eller nøgler.
+export async function GET(req: Request) {
+  const secret = process.env.CRON_SECRET;
+  const byKey = !!secret && req.headers.get('authorization') === `Bearer ${secret}`;
+  if (!byKey && (await currentUser())?.role !== 'admin') return new Response('Ikke fundet', { status: 404 });
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   let db = false;
   let adminExists = false;

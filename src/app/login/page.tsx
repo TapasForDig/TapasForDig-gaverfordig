@@ -4,20 +4,31 @@ import { Notice, Shell } from '@/components/ui';
 import { checkPassword, currentUser, hashPassword, homeFor, startSession, type Role } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { str } from '@/lib/format';
+import { clientIp, tooMany } from '@/lib/ratelimit';
 
 async function login(fd: FormData) {
   'use server';
   const email = str(fd, 'email').toLowerCase();
   const pw = str(fd, 'password');
+  const ip = await clientIp();
+  if ((await tooMany(`login:${email}`, 10, 900)) || (await tooMany(`login-ip:${ip}`, 30, 900))) {
+    redirect('/login?m=' + encodeURIComponent('!For mange forsøg. Vent 15 minutter, eller brug "Glemt adgangskode".'));
+  }
   let u = await one<{ id: number; password_hash: string; role: Role }>('select id, password_hash, role from users where email = $1', [email]);
 
   // Admin fra Vercel (ADMIN_EMAIL / ADMIN_PASSWORD) kan altid logge ind – og bliver oprettet/opdateret hvis nødvendigt
   const envEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const envPw = process.env.ADMIN_PASSWORD?.trim();
   const isEnvAdmin = !!envEmail && !!envPw && email === envEmail && pw === envPw;
+  if (isEnvAdmin && u && u.role !== 'admin') {
+    // Gør aldrig en eksisterende butiks- eller virksomhedsbruger til admin – den kan være oprettet af en anden
+    console.error(`[login] ADMIN_EMAIL ${email} tilhører en ${u.role}-bruger. Ret ADMIN_EMAIL eller brugeren i databasen.`);
+    redirect('/login?m=' + encodeURIComponent('!Forkert e-mail eller adgangskode'));
+  }
   if (isEnvAdmin && (!u || !checkPassword(pw, u.password_hash))) {
     if (u) {
-      await q(`update users set password_hash = $1, role = 'admin' where id = $2`, [hashPassword(pw), u.id]);
+      await q(`update users set password_hash = $1 where id = $2`, [hashPassword(pw), u.id]);
+      await q('delete from sessions where user_id = $1', [u.id]);
     } else {
       await q(`insert into users (email, password_hash, name, role) values ($1,$2,'Admin','admin')`, [email, hashPassword(pw)]);
     }

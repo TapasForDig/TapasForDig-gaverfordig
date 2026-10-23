@@ -68,7 +68,7 @@ export default async function Thanks({ params, searchParams }: { params: Promise
         )}
         {!mine && (
           <div className="card stack-s">
-            <p>{sp.login ? 'Bestillingen er lagt på jeres eksisterende konto.' : 'Bestillingen er modtaget.'} Log ind for at se gavekoder og følge med i, hvem der har valgt gave.</p>
+            <p>Bestillingen er modtaget. Log ind for at se gavekoder og følge med i, hvem der har valgt gave.</p>
             <div>
               <Link className="btn" href="/login">
                 Log ind

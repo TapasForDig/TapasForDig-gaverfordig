@@ -73,6 +73,12 @@ export async function endSession() {
   jar.delete(RECIPIENT_COOKIE);
 }
 
+// Logger brugeren ud alle andre steder end her (fx efter skift af adgangskode)
+export async function endOtherSessions(userId: number) {
+  const jar = await cookies();
+  await q('delete from sessions where user_id = $1 and token <> $2', [userId, jar.get(USER_COOKIE)?.value ?? '']);
+}
+
 export async function currentUser(): Promise<User | null> {
   const jar = await cookies();
   const t = jar.get(USER_COOKIE)?.value;

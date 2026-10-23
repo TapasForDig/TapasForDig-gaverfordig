@@ -9,6 +9,7 @@ import { normalizeCode } from '@/lib/purchase';
 import { getOrder, getProduct, getSetting, giftsFor, type Season } from '@/lib/gifts';
 import { FoodInfo } from '@/components/FoodInfo';
 import { sendMail } from '@/lib/mail';
+import { clientIp, tooMany } from '@/lib/ratelimit';
 
 const OPEN = ['confirmed', 'invited'];
 
@@ -21,6 +22,7 @@ async function deadlineFor(o: { choose_deadline: Date | null; season_id: number 
 async function redeem(fd: FormData) {
   'use server';
   const code = normalizeCode(str(fd, 'code'));
+  if (await tooMany(`kode-ip:${await clientIp()}`, 20, 600)) redirect('/gave?m=' + encodeURIComponent('!For mange forsøg. Vent 10 minutter, og prøv igen.'));
   const r = await one<{ id: number; token: string; held: boolean }>(`select id, token, exists (select 1 from gift_orders ho join purchases hp on hp.id = ho.purchase_id where ho.id = recipients.order_id and hp.hold) as held from recipients where code = $1`, [code]);
   if (!r) redirect('/gave?m=' + encodeURIComponent('!Koden findes ikke. Tjek at du har skrevet den rigtigt – fx ABCD-EFGH.'));
   if (r.held) redirect('/gave?ikkeaktiv=1');
@@ -36,6 +38,8 @@ async function saveInfo(fd: FormData) {
   if (!r) redirect('/gave');
   const o = await getOrder(r.order_id);
   if (!o) redirect('/gave');
+  const dl = await deadlineFor(o);
+  if (!OPEN.includes(o.status) || (dl && dl < new Date())) redirect('/gave?m=' + encodeURIComponent('!Vælgeperioden er slut – kontakt din arbejdsgiver, hvis adressen skal rettes'));
   const name = str(fd, 'name');
   const email = str(fd, 'email').toLowerCase();
   if (!name) redirect('/gave?ret=1&m=' + encodeURIComponent('!Skriv dit navn'));
@@ -72,11 +76,15 @@ async function choose(fd: FormData) {
   if (p.alcohol && !r.age_confirmed && fd.get('age') !== 'ja') {
     redirect('/gave?m=' + encodeURIComponent('!Bekræft at du er fyldt 18 år for at vælge en gave med alkohol'));
   }
-  await q('update recipients set chosen_product_id = $1, chosen_at = now(), is_default = false, age_confirmed = age_confirmed or $2 where id = $3', [
-    p.id,
-    fd.get('age') === 'ja',
-    r.id,
-  ]);
+  // Opdatér kun, hvis der stadig er flere på lager (undgår oversalg, når to vælger samtidig)
+  const done = await q<{ id: number }>(
+    `update recipients set chosen_product_id = $1, chosen_at = now(), is_default = false, age_confirmed = age_confirmed or $2
+      where id = $3 and ($1 = $4::int or (select coalesce(stock, 2147483647) from products where id = $1) >
+            (select count(*) from recipients where chosen_product_id = $1 and id <> $3))
+      returning id`,
+    [p.id, fd.get('age') === 'ja', r.id, r.chosen_product_id ?? 0],
+  );
+  if (!done.length) redirect('/gave?m=' + encodeURIComponent('!Gaven blev desværre valgt af andre lige før dig. Vælg en anden.'));
   await logEvent(`modtager:${r.id}`, 'recipient', r.id, 'gave valgt', `${p.name} (${p.shop_name})`);
   if (r.email) {
     await sendMail(

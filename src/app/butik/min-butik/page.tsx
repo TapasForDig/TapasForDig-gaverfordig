@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { ImageUpload } from '@/components/ImageUpload';
 import { Badge, Notice, Shell } from '@/components/ui';
-import { checkPassword, hashPassword, newToken } from '@/lib/auth';
+import { checkPassword, endOtherSessions, hashPassword, newToken } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { appUrl, str } from '@/lib/format';
 import { sendMail } from '@/lib/mail';
@@ -102,6 +102,7 @@ async function changePassword(fd: FormData) {
   if (pw.length < 8) back(shop.id, '!Den nye adgangskode skal være mindst 8 tegn');
   if (pw !== str(fd, 'new2')) back(shop.id, '!De to nye adgangskoder er ikke ens');
   await q('update users set password_hash = $1 where id = $2', [hashPassword(pw), u.id]);
+  await endOtherSessions(u.id);
   back(shop.id, 'Din adgangskode er skiftet');
 }
 

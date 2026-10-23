@@ -205,6 +205,9 @@ create table if not exists purchases (
   created_at timestamptz not null default now()
 );
 
+create table if not exists rate_hits (key text not null, at timestamptz not null default now());
+create index if not exists rate_hits_key_at on rate_hits (key, at);
+alter table purchases add column if not exists submit_key text unique;
 alter table recipients add column if not exists anonymized_at timestamptz;
 alter table purchases add column if not exists hold boolean not null default false;
 alter table purchases add column if not exists paid_at timestamptz;

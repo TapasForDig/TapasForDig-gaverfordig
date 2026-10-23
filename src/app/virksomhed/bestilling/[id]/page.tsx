@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Badge, Notice, Progress, Shell, Stat } from "@/components/ui";
-import { logEvent, q } from "@/lib/db";
+import { logEvent, one, q } from "@/lib/db";
 import { dato, datoTid, kr, str } from "@/lib/format";
 import { giftsFor } from "@/lib/gifts";
 import { sendMail } from "@/lib/mail";
@@ -108,6 +108,12 @@ async function saveLine(fd: FormData) {
   const { p } = await ownPurchase(Number(fd.get("id")));
   const orderId = Number(fd.get("order"));
   const def = Number(fd.get("default_product")) || null;
+  if (def) {
+    // Standardgaven skal være en godkendt gave i ordrelinjens egen prisgruppe
+    const line = await one<{ price_category_id: number }>("select price_category_id from gift_orders where id = $1 and purchase_id = $2", [orderId, p.id]);
+    const allowed = line ? await giftsFor(line.price_category_id, null) : [];
+    if (!allowed.some((x) => x.id === def)) back(p.id, "!Standardgaven skal være en af gaverne i prisgruppen");
+  }
   await q(
     `update gift_orders set greeting = $1, default_product_id = $2 where id = $3 and purchase_id = $4 and status in ('confirmed','invited')`,
     [str(fd, "greeting"), def, orderId, p.id],

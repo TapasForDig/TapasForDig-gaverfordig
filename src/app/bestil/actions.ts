@@ -6,6 +6,7 @@ import { logEvent, one, q } from '@/lib/db';
 import { appUrl, str } from '@/lib/format';
 import { activeSeason, categories } from '@/lib/gifts';
 import { sendMail } from '@/lib/mail';
+import { clientIp, tooMany } from '@/lib/ratelimit';
 import {
   assignRecipients,
   calcTotals,
@@ -25,6 +26,7 @@ export interface OrderState {
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_QTY = 2000; // pr. bestilling – større ordrer aftales direkte
 
 export async function placeOrder(_prev: OrderState, fd: FormData): Promise<OrderState> {
   const v: Record<string, string> = {};
@@ -42,6 +44,14 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
     return fail('Kurven kunne ikke læses. Prøv igen.');
   }
   lines = lines.filter((l) => l.qty > 0 && groups.some((g) => g.id === l.groupId));
+  if (lines.reduce((s, l) => s + l.qty, 0) > MAX_QTY) return fail(`Bestillinger på mere end ${MAX_QTY} gaver aftales direkte med os. Kontakt os, så hjælper vi.`);
+  // Samme indsendelse to gange (dobbeltklik) → vis den bestilling, der allerede er lavet
+  const submitKey = (v.submit_key || '').slice(0, 64) || null;
+  if (submitKey) {
+    const dup = await one<{ id: number }>('select id from purchases where submit_key = $1', [submitKey]);
+    if (dup) redirect(`/bestil/tak/${dup.id}`);
+  }
+  if (await tooMany(`bestil:${await clientIp()}`, 10, 3600)) return fail('For mange bestillinger fra samme sted på kort tid. Prøv igen senere, eller kontakt os.');
   const mode = v.mode === 'home' ? 'home' : 'company';
   const wrapping = v.wrapping === '1';
   const codesDelivery = v.codes === 'file' ? 'file' : 'email';
@@ -84,12 +94,10 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
   const contactEmail = v.contact_email.toLowerCase();
   let companyId: number | null = me?.role === 'virksomhed' ? me.company_id : null;
   let newUserId: number | null = null;
-  let existingLogin = false;
   if (!companyId) {
-    const existing = await one<{ id: number; company_id: number | null; role: string }>('select id, company_id, role from users where email = $1', [contactEmail]);
-    if (existing?.role === 'virksomhed' && existing.company_id) {
-      companyId = existing.company_id;
-      existingLogin = true;
+    // En bestilling må aldrig lægges på en eksisterende konto uden login – ellers kan andre se eller bestille i jeres navn
+    if (await one('select 1 from users where email = $1', [contactEmail])) {
+      return fail(`Der findes allerede en konto med ${contactEmail}. Log ind for at bestille på jeres konto (kurven bliver gemt), eller brug en anden e-mail.`);
     }
   }
   if (!companyId) {
@@ -106,7 +114,7 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
       );
       newUserId = u!.id;
     }
-  } else if (!existingLogin) {
+  } else {
     // Kun en indlogget virksomhed må opdatere sine egne stamdata
     await q('update companies set name = $1, cvr = coalesce($2, cvr), phone = $3 where id = $4', [v.company_name, cvr || null, v.contact_phone, companyId]);
   }
@@ -117,8 +125,9 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
         cvr, company_name, billing_address, billing_zip, billing_city, billing_country, billing_email,
         delivery_same, delivery_name, delivery_address, delivery_zip, delivery_city, delivery_att,
         contact_first, contact_last, contact_email, contact_phone, newsletter,
-        quantity, subtotal_ex, delivery_fee_ex, wrapping_fee_ex, moms, total_inc)
-     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34)
+        quantity, subtotal_ex, delivery_fee_ex, wrapping_fee_ex, moms, total_inc, submit_key)
+     values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35)
+     on conflict (submit_key) do nothing
      returning id`,
     [
       companyId, mode, week.key, week.deliveryDate, week.chooseDeadline, wrapping, codesDelivery, payment, ean || null, v.po_number || null,
@@ -126,10 +135,14 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
       deliverySame, deliverySame ? null : v.delivery_name || v.company_name, deliverySame ? null : v.delivery_address, deliverySame ? null : v.delivery_zip,
       deliverySame ? null : v.delivery_city, deliverySame ? null : v.delivery_att || null,
       v.contact_first, v.contact_last, contactEmail, v.contact_phone, v.newsletter === '1',
-      totals.qty, totals.subtotal, totals.deliveryFee, totals.wrappingFee, totals.moms, totals.total,
+      totals.qty, totals.subtotal, totals.deliveryFee, totals.wrappingFee, totals.moms, totals.total, submitKey,
     ],
   );
-  const purchaseId = p!.id;
+  if (!p) {
+    const dup = await one<{ id: number }>('select id from purchases where submit_key = $1', [submitKey]);
+    redirect(`/bestil/tak/${dup?.id ?? ''}`);
+  }
+  const purchaseId = p.id;
   const deliveryText = deliverySame
     ? `${v.company_name}, ${v.billing_address}, ${v.billing_zip} ${v.billing_city}`
     : `${v.delivery_name || v.company_name}, ${v.delivery_address}, ${v.delivery_zip} ${v.delivery_city}`;
@@ -154,7 +167,7 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
   }
   await logEvent(contactEmail, 'purchase', purchaseId, 'bestilt', `${totals.qty} gaver, ${totals.total} kr. inkl. moms`);
 
-  if (await needsPrepayment(companyId, totals.total, purchaseId)) {
+  if (await needsPrepayment(companyId, totals.total, purchaseId, cvr || null)) {
     await q('update purchases set hold = true where id = $1', [purchaseId]);
     await logEvent('system', 'purchase', purchaseId, 'afventer betaling', 'ny kunde over grænsen for forudbetaling');
   }
@@ -180,5 +193,5 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
     );
     await startSession(newUserId);
   }
-  redirect(`/bestil/tak/${purchaseId}${existingLogin && me?.company_id !== companyId ? '?login=1' : ''}`);
+  redirect(`/bestil/tak/${purchaseId}`);
 }
