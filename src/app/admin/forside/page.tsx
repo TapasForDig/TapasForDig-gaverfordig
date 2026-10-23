@@ -11,13 +11,14 @@ import { adminNav } from '../nav';
 
 // Forsidens billeder og tekster. Billederne gemmes som almindelige indstillinger (URL).
 const IMAGES: [string, string, string][] = [
-  ['forside_hero_billede', 'Stort billede øverst', '1600 × 1000 px (16:10), liggende. Fx en flot gave fra en lokal butik.'],
+  ['forside_hero_billede', 'Stort billede øverst til højre', '1600 × 1200 px (4:3), liggende. Et billede, der sætter Vejen Kommune i fokus – fx en gade, et torv eller en butik i Brørup/Vejen. Hold det vigtigste midt i billedet.'],
   ['forside_fritvalg_billede', 'Indgang 1: Frit valg', '1600 × 1000 px (16:10)'],
   ['forside_webshop_billede', 'Indgang 2: Vælg selv i webshoppen', '1600 × 1000 px (16:10)'],
   ['forside_gaveaesker_billede', 'Indgang 3: Gaveæsker og julekalendere', '1600 × 1000 px (16:10)'],
 ];
 const TEXTS: [string, string, string][] = [
   ['forside_overskrift', 'Overskrift', 'Giv en gave, der bliver i lokalsamfundet'],
+  ['forside_hero_tekst', 'Lille tekst på billedet (fx "Brørup Torv")', ''],
   ['forside_undertekst', 'Tekst under overskriften', 'Jeres medarbejdere vælger selv deres gave blandt varer fra lokale butikker. Vi samler, pakker med navn og leverer det hele til jer.'],
 ];
 
@@ -80,7 +81,7 @@ export default async function FrontPageAdmin({ searchParams }: { searchParams: P
           <div className="tiles">
             {IMAGES.map(([key, label, hint], i) => (
               <div key={key} className="stack-s">
-                <ImageUpload name={key} current={imgs[i] || null} label={label} />
+                <ImageUpload name={key} current={imgs[i] || null} label={label} aspect={key === 'forside_hero_billede' ? '4 / 3' : '16 / 10'} />
                 <span className="hint">{hint}</span>
                 {imgs[i] && (
                   <label className="check small">

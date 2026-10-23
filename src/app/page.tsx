@@ -16,6 +16,7 @@ export default async function Home() {
     getSetting('forside_overskrift'),
     getSetting('forside_undertekst'),
   ]);
+  const heroCaption = await getSetting('forside_hero_tekst');
   const next = deliveryWeeks(s).find((w) => w.available);
   const demo = process.env.NO_DEMO !== '1';
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' });
@@ -23,8 +24,21 @@ export default async function Home() {
     <>
       <PublicHeader />
 
+      {next && (
+        <div className="deadline-bar">
+          <div className="deadline-inner">
+            <span>
+              <b>Næste levering: uge {next.week}</b>
+              <span className="sep">·</span>Bestil inden <b>{fmt(next.chooseDeadline)}</b>
+              <span className="sep">·</span>Leveres senest {fmt(next.deliveryDate + 'T12:00:00Z')}
+            </span>
+            <Link href="/bestil">Bestil nu →</Link>
+          </div>
+        </div>
+      )}
+
       <section className="hero">
-        <div style={{ flex: '1 1 520px' }} className="stack-s">
+        <div style={{ flex: '1 1 480px' }} className="stack-s">
           <div className="eyebrow">Firmagaver fra Vejen Kommune</div>
           <h1>{title || 'Giv en gave, der bliver i lokalsamfundet'}</h1>
           <p className="muted" style={{ fontSize: 17, maxWidth: 620 }}>
@@ -39,18 +53,21 @@ export default async function Home() {
             </Link>
           </div>
         </div>
-        {hero && (
-          <div className="hero-img">
-            <img src={hero} alt="" />
-          </div>
-        )}
-        {next && (
-          <div className={`card ${hero ? 'hero-badge' : ''}`} style={{ minWidth: 240 }}>
-            <div className="eyebrow">Næste levering · uge {next.week}</div>
-            <div style={{ fontSize: 26, fontWeight: 700, marginTop: 4 }}>Bestil inden {fmt(next.chooseDeadline)}</div>
-            <div className="small muted">Leveres senest {fmt(next.deliveryDate + 'T12:00:00Z')}</div>
-          </div>
-        )}
+        <figure className="hero-img">
+          {hero ? (
+            <img src={hero} alt={heroCaption || 'Vejen Kommune'} />
+          ) : (
+            <div className="hero-fallback">
+              <span className="eyebrow">Gaver fra</span>
+              <div className="towns">
+                {['Brørup', 'Vejen', 'Rødding', 'Holsted', 'Askov', 'Lintrup', 'Gesten', 'Jels', 'Skodborg', 'Bække'].map((t) => (
+                  <span key={t}>{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {(heroCaption || !hero) && <figcaption>{heroCaption || 'Lokale butikker i Vejen Kommune'}</figcaption>}
+        </figure>
       </section>
 
       <main className="wrap stack" style={{ paddingTop: 0 }}>
