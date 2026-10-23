@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { TopBar } from '@/components/ui';
+import { PublicHeader } from '@/components/ui';
 import { activeSeason, categories } from '@/lib/gifts';
 import { dato, kr } from '@/lib/format';
 
@@ -8,20 +8,7 @@ export default async function Home() {
   const demo = process.env.NO_DEMO !== '1';
   return (
     <>
-      <TopBar />
-      <header className="header">
-        <div className="header-inner">
-          <Link href="/" className="logo">
-            <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
-          </Link>
-          <nav className="nav" aria-label="Hovedmenu">
-            <a href="#saadan">Sådan virker det</a>
-            <Link href="/virksomhed/opret">For virksomheder</Link>
-            <Link href="/butik/tilmeld">For butikker</Link>
-            <Link href="/login">Log ind</Link>
-          </nav>
-        </div>
-      </header>
+      <PublicHeader />
 
       <section className="hero">
         <div style={{ flex: '1 1 520px' }} className="stack-s">
@@ -78,7 +65,9 @@ export default async function Home() {
               </div>
             ))}
           </div>
-          <p className="small muted">Priser er gavens værdi inkl. moms. Gaverne er fysiske tingsgaver fra lokale butikker.</p>
+          <p className="small muted">
+            Priser er gavens værdi inkl. moms. Gaverne er fysiske tingsgaver fra lokale butikker. <Link href="/skatteregler">Se hvad skattereglerne siger</Link>
+          </p>
         </section>
 
         <section className="tiles">

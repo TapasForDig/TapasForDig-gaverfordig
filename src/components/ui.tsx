@@ -5,6 +5,36 @@ export function TopBar() {
   return <div className="topbar">Lokale gaver · Pakket og leveret samlet · Fra butikker i Vejen Kommune</div>;
 }
 
+// Header til de offentlige sider (forside, skatteregler)
+export function PublicHeader({ active }: { active?: string }) {
+  const links = [
+    { href: '/#saadan', label: 'Sådan virker det' },
+    { href: '/skatteregler', label: 'Skatteregler' },
+    { href: '/virksomhed/opret', label: 'For virksomheder' },
+    { href: '/butik/tilmeld', label: 'For butikker' },
+    { href: '/login', label: 'Log ind' },
+  ];
+  return (
+    <>
+      <TopBar />
+      <header className="header">
+        <div className="header-inner">
+          <Link href="/" className="logo">
+            <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
+          </Link>
+          <nav className="nav" aria-label="Hovedmenu">
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className={active === l.href ? 'on' : ''}>
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </header>
+    </>
+  );
+}
+
 export function Shell({
   area,
   nav,
