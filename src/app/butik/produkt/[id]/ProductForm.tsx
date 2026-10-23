@@ -128,7 +128,6 @@ export default function ProductForm(props: Props) {
     [desc.trim().length >= 120, `Beskrivelse på mindst 120 tegn (${desc.trim().length})`],
     [!!kind, 'Kategori'],
     [!!chosen && !priceWarn && priceNum > 0, 'Prisgruppe og udsalgspris'],
-    ...(food ? ([[ingredients.trim().length >= 10 && !!netContent.trim(), 'Ingredienser, allergener og nettoindhold']] as const) : []),
   ] as const;
 
   return (
@@ -203,11 +202,11 @@ export default function ProductForm(props: Props) {
           {food && (
             <div className="stack-s food-fields">
               <div className="alert warn">
-                Mad og drikke: Ingredienser og allergener skal kunne ses, før medarbejderen vælger gaven. Hos medarbejderen står der desuden, at gaven pakkes først ved bestilling, og at man kan
-                kontakte Gaver For Dig om allergener.
+                Mad og drikke: Hos medarbejderen står der, at gaven pakkes først ved bestilling, og at man kan kontakte Gaver For Dig om allergener. Har du ingrediensliste og
+                allergener ved hånden, så skriv dem gerne – men det er ikke et krav.
               </div>
               <div className="field">
-                <label htmlFor="ingredients">Ingredienser og allergener *</label>
+                <label htmlFor="ingredients">Ingredienser og allergener (valgfrit)</label>
                 <textarea
                   id="ingredients"
                   name="ingredients"
@@ -217,10 +216,10 @@ export default function ProductForm(props: Props) {
                   placeholder={'Fx: Pesto: basilikum, olivenolie, PINJEKERNER, PARMESAN (MÆLK), hvidløg, salt.\nOliven: grønne oliven, vand, salt.'}
                   style={{ minHeight: 120 }}
                 />
-                <span className="hint">Skriv ingredienslisten for hver vare i gaven, som den står på pakken. Skriv allergener med STORE BOGSTAVER.</span>
+                <span className="hint">Fx de vigtigste allergener i gavekurven. Skriv allergener med STORE BOGSTAVER.</span>
               </div>
               <div className="field">
-                <label htmlFor="net_content">Nettoindhold *</label>
+                <label htmlFor="net_content">Nettoindhold (valgfrit)</label>
                 <input id="net_content" name="net_content" type="text" maxLength={60} value={netContent} onChange={(e) => setNetContent(e.target.value)} placeholder="Fx 2 × 75 cl eller 450 g" style={{ maxWidth: 320 }} />
               </div>
             </div>

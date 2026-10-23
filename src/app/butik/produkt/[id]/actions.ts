@@ -66,8 +66,6 @@ export async function saveProduct(fd: FormData) {
     if (stock < 1) problems.push('et antal på mindst 1');
     if (!wrapOk) problems.push('bekræftelse af gaveemballage');
     if (food && !shelfOk) problems.push('bekræftelse af holdbarhed');
-    if (food && (ingredients ?? '').length < 10) problems.push('ingrediensliste med allergener');
-    if (food && !netContent) problems.push('nettoindhold');
     if (problems.length) {
       // Gem alligevel som kladde, så intet går tabt
       status = existing?.status === 'approved' ? 'pending' : existing?.status === 'paused' ? 'paused' : 'draft';
