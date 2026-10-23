@@ -82,6 +82,7 @@ export const PRODUCT_STATUS: Record<string, string> = {
   pending: 'Afventer godkendelse',
   approved: 'Godkendt',
   rejected: 'Skal rettes',
+  paused: 'På pause',
 };
 
 const PRODUCT_SELECT = `

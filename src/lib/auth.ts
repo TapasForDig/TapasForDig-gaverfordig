@@ -54,7 +54,7 @@ export function newToken(bytes = 24): string {
 }
 
 export function homeFor(role: Role): string {
-  return { admin: '/admin', butik: '/butik', virksomhed: '/virksomhed', logistik: '/logistik' }[role];
+  return { admin: '/admin', butik: '/butik/produkter', virksomhed: '/virksomhed', logistik: '/logistik' }[role];
 }
 
 export async function startSession(userId: number) {
