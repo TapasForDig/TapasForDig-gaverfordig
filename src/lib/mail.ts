@@ -2,7 +2,7 @@ import { q } from './db';
 
 // Alle mails gemmes i outbox (kan ses under Admin → Mails).
 // Er RESEND_API_KEY sat, sendes de også rigtigt via Resend.
-export async function sendMail(to: string, subject: string, body: string) {
+export async function sendMail(to: string, subject: string, body: string, replyTo?: string) {
   let status = 'gemt';
   const key = process.env.RESEND_API_KEY;
   if (key) {
@@ -13,7 +13,7 @@ export async function sendMail(to: string, subject: string, body: string) {
         body: JSON.stringify({
           from: process.env.MAIL_FROM || 'Gaver For Dig <info@gaverfordig.dk>',
           to: [to],
-          reply_to: process.env.MAIL_REPLY_TO || 'info@gaverfordig.dk',
+          reply_to: replyTo || process.env.MAIL_REPLY_TO || 'info@gaverfordig.dk',
           subject,
           text: body,
         }),

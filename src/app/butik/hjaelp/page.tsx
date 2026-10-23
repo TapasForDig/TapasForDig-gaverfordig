@@ -70,7 +70,9 @@ export default async function ShopHelp({ searchParams }: { searchParams: Promise
             </section>
           ))}
         </div>
-        <p className="small muted">Spørgsmål? Skriv til os, så hjælper vi.</p>
+        <p className="small muted">
+          Spørgsmål? <a href="/kontakt">Skriv til os</a>, så hjælper vi.
+        </p>
       </div>
     </Shell>
   );

@@ -15,6 +15,7 @@ export function PublicHeader({ active }: { active?: string }) {
     { href: '/butikker', label: 'Butikkerne' },
     { href: '/skatteregler', label: 'Skatteregler' },
     { href: '/butik/tilmeld', label: 'For butikker' },
+    { href: '/kontakt', label: 'Kontakt' },
     { href: '/login', label: 'Log ind' },
   ];
   return (

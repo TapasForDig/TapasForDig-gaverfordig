@@ -69,6 +69,39 @@ async function resend(fd: FormData) {
   back(`Nyt login-link er sendt til ${user.email}`);
 }
 
+async function shopAction(fd: FormData) {
+  'use server';
+  const u = await requireRole('admin');
+  const id = Number(fd.get('shop'));
+  const shop = await one<{ name: string; chosen: number }>(
+    `select s.name, (select count(*)::int from recipients r join products p on p.id = r.chosen_product_id where p.shop_id = s.id) as chosen
+       from shops s where s.id = $1`,
+    [id],
+  );
+  if (!shop) return back('!Butikken findes ikke');
+  const act = String(fd.get('act'));
+  if (act === 'delete') {
+    if (fd.get('confirm') !== 'ja') return back('!Sæt flueben for at bekræfte sletningen');
+    if (shop.chosen > 0)
+      return back(`!${shop.name} har gaver, som medarbejdere har valgt, og kan derfor ikke slettes. Deaktivér butikken i stedet – så forsvinder den fra siden.`);
+    // Sletter også butikkens logins, produkter og afleveringssedler
+    await q('delete from shops where id = $1', [id]);
+    await logEvent(u.email, 'shop', id, 'slettet', shop.name);
+    return back(`${shop.name} er slettet`);
+  }
+  if (act === 'deactivate') {
+    await q(`update shops set status = 'rejected' where id = $1`, [id]);
+    await logEvent(u.email, 'shop', id, 'deaktiveret', shop.name);
+    return back(`${shop.name} er deaktiveret og vises ikke længere på siden`);
+  }
+  if (act === 'activate') {
+    await q(`update shops set status = 'approved' where id = $1`, [id]);
+    await logEvent(u.email, 'shop', id, 'aktiveret', shop.name);
+    return back(`${shop.name} er aktiv igen`);
+  }
+  back('!Ukendt handling');
+}
+
 interface Row {
   id: number;
   name: string;
@@ -110,6 +143,7 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
                     <th className="num">Gaver</th>
                     <th className="num">Valgt</th>
                     <th>Login</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -128,7 +162,7 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
                       </td>
                       <td>
                         <Badge tone={r.status === 'approved' ? 'ok' : r.status === 'pending' ? 'warn' : 'bad'}>
-                          {r.status === 'approved' ? 'Godkendt' : r.status === 'pending' ? 'Afventer' : 'Afvist'}
+                          {r.status === 'approved' ? 'Godkendt' : r.status === 'pending' ? 'Afventer' : 'Deaktiveret'}
                         </Badge>
                       </td>
                       <td className="num small">
@@ -148,6 +182,42 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
                           </form>
                         ))}
                         {!r.users && <span className="muted">Intet login</span>}
+                      </td>
+                      <td className="small">
+                        <details>
+                          <summary className="muted" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            Mere
+                          </summary>
+                          <div className="stack-s" style={{ marginTop: 8, minWidth: 190 }}>
+                            <form action={shopAction}>
+                              <input type="hidden" name="shop" value={r.id} />
+                              {r.status === 'rejected' ? (
+                                <button className="btn outline small" name="act" value="activate">
+                                  Aktivér igen
+                                </button>
+                              ) : (
+                                <button className="btn outline small" name="act" value="deactivate">
+                                  Deaktivér
+                                </button>
+                              )}
+                            </form>
+                            <form action={shopAction} className="stack-s" style={{ gap: 6 }}>
+                              <input type="hidden" name="shop" value={r.id} />
+                              {r.chosen > 0 ? (
+                                <span className="muted">Kan ikke slettes – {r.chosen} gaver er valgt. Deaktivér i stedet.</span>
+                              ) : (
+                                <>
+                                  <label className="check small">
+                                    <input type="checkbox" name="confirm" value="ja" /> Slet butik, logins og gaver
+                                  </label>
+                                  <button className="btn small" name="act" value="delete" style={{ background: 'var(--bad)', borderColor: 'var(--bad)' }}>
+                                    Slet {r.name}
+                                  </button>
+                                </>
+                              )}
+                            </form>
+                          </div>
+                        </details>
                       </td>
                     </tr>
                   ))}

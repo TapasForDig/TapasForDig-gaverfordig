@@ -218,7 +218,7 @@ export default function OrderFlow({
                   <a className="btn small" href={`tel:${contact.phone.replace(/\s/g, '')}`}>
                     Ring {contact.phone}
                   </a>
-                  <a className="btn small outline" href={`mailto:${contact.email}`}>
+                  <a className="btn small outline" href="/kontakt" target="_blank" rel="noopener">
                     Skriv til os
                   </a>
                 </div>
