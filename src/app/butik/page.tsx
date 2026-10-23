@@ -180,7 +180,7 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
                   </tbody>
                 </table>
               </div>
-              <div className="card-foot small muted">Gaverne afleveres gaveindpakket. Logistikcentralen sætter navnemærkat på.</div>
+              <div className="card-foot small muted">Gaverne afleveres i egen emballage. Logistikcentralen står for indpakning og navnemærkat.</div>
             </section>
           );
         })}

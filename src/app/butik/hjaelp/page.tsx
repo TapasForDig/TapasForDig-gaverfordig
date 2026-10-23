@@ -28,7 +28,7 @@ const guides = [
       'Når vælgefristen er slut, får du en mail.',
       'Under "Til aflevering" står præcis hvor mange af hver vare, du skal levere.',
       'Print afleveringssedlen og læg den ved varerne.',
-      'Aflever gaveindpakket på logistikcentralen inden fristen, og tryk "Markér som afleveret".',
+      'Aflever gaverne i egen emballage på logistikcentralen inden fristen, og tryk "Markér som afleveret".',
     ],
   },
   {
