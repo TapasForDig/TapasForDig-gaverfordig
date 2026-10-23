@@ -28,7 +28,6 @@ export default async function Home() {
   const shops = await publicShops();
   const next = deliveryWeeks(s).find((w) => w.available);
   const demo = process.env.NO_DEMO !== '1';
-  const fmt = (iso: string) => new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' });
   return (
     <>
       <PublicHeader />
@@ -37,13 +36,12 @@ export default async function Home() {
         <div className="deadline-bar">
           <div className="deadline-inner">
             <span>
-              <b><span className="extra">Næste levering: </span>Uge {next.week}</b>
-              <span className="sep">·</span>Bestil inden <b>{fmt(next.chooseDeadline)}</b>
+              <b>Levering hver uge frem til jul</b>
               <span className="extra">
-                <span className="sep">·</span>Leveres senest {fmt(next.deliveryDate + 'T12:00:00Z')}
+                <span className="sep">·</span>Næste levering i uge {next.week}
               </span>
             </span>
-            <Link href="/bestil">Bestil nu →</Link>
+            <Link href="/levering">Se deadlines →</Link>
           </div>
         </div>
       )}
