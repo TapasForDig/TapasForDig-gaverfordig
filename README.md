@@ -48,7 +48,7 @@ Start forfra med ny demo-data: stop serveren og kør `npm run seed`.
 ## Sæt i drift (Supabase + Vercel)
 
 1. Opret et projekt på supabase.com (region EU, fx Frankfurt).
-2. Under Storage: opret en offentlig bucket med navnet `produkter`.
+2. (Billed-bucket `produkter` oprettes automatisk ved første upload.)
 3. Opret projektet på vercel.com ud fra dette GitHub-repo.
 4. Sæt miljøvariabler i Vercel:
 

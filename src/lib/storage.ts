@@ -22,11 +22,24 @@ export async function saveImage(file: File): Promise<string> {
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_KEY;
   if (url && key) {
-    const res = await fetch(`${url}/storage/v1/object/produkter/${name}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': file.type },
-      body: buf,
-    });
+    // Virker med både den nye "secret key" (sb_secret_...) og den gamle service_role-nøgle
+    const auth = { apikey: key, Authorization: `Bearer ${key}` };
+    const upload = () =>
+      fetch(`${url}/storage/v1/object/produkter/${name}`, {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': file.type },
+        body: buf,
+      });
+    let res = await upload();
+    if (!res.ok) {
+      // Første gang: opret den offentlige bucket "produkter" automatisk og prøv igen
+      await fetch(`${url}/storage/v1/bucket`, {
+        method: 'POST',
+        headers: { ...auth, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: 'produkter', name: 'produkter', public: true }),
+      });
+      res = await upload();
+    }
     if (!res.ok) throw new Error('Billedet kunne ikke gemmes');
     return `${url}/storage/v1/object/public/produkter/${name}`;
   }
