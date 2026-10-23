@@ -51,6 +51,20 @@ async function payment(fd: FormData) {
   redirect('/admin/afregning?m=' + encodeURIComponent(m));
 }
 
+async function removePurchase(fd: FormData) {
+  'use server';
+  const u = await requireRole('admin');
+  const id = Number(fd.get('id'));
+  const busy = await q<{ n: number }>(
+    `select count(*)::int as n from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = $1 and r.handoff_id is not null`,
+    [id],
+  );
+  if (busy[0].n > 0) redirect('/admin/afregning?m=' + encodeURIComponent(`!Ordre ${id} er allerede sendt videre til butikkerne og kan ikke slettes`));
+  await q('delete from purchases where id = $1', [id]);
+  await logEvent(u.email, 'purchase', id, 'slettet');
+  redirect('/admin/afregning?m=' + encodeURIComponent(`Ordre ${id} er slettet`));
+}
+
 interface Inv {
   id: number;
   company_name: string;
@@ -219,6 +233,16 @@ export default async function Billing({ searchParams }: { searchParams: Promise<
                           </>
                         )}
                       </form>
+                      <details className="small" style={{ marginTop: 6 }}>
+                        <summary className="muted" style={{ cursor: 'pointer' }}>Slet</summary>
+                        <form action={removePurchase} className="stack-s" style={{ marginTop: 6 }}>
+                          <input type="hidden" name="id" value={i.id} />
+                          <span className="muted">Sletter ordren og alle gavekoder. Kan ikke fortrydes.</span>
+                          <button className="btn small" style={{ background: 'var(--bad)', borderColor: 'var(--bad)' }}>
+                            Slet ordre {i.id}
+                          </button>
+                        </form>
+                      </details>
                     </td>
                   </tr>
                 ))}
