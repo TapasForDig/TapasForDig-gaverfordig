@@ -29,7 +29,7 @@ async function requestReset(fd: FormData) {
 export default async function Forgot({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
   const { m } = await searchParams;
   return (
-    <Shell showLogout={false}>
+    <Shell showLogout={false} active="/login">
       <div className="card" style={{ maxWidth: 440, margin: '24px auto' }}>
         <form action={requestReset} className="form">
           <h1 style={{ fontSize: 28 }}>Glemt adgangskode</h1>

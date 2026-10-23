@@ -39,7 +39,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (u) redirect(homeFor(u.role));
   const { m } = await searchParams;
   return (
-    <Shell showLogout={false}>
+    <Shell showLogout={false} active="/login">
       <div className="card" style={{ maxWidth: 440, margin: '24px auto' }}>
         <form action={login} className="form">
           <h1 style={{ fontSize: 28 }}>Log ind</h1>

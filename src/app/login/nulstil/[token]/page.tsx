@@ -41,7 +41,7 @@ export default async function ResetPage({ params, searchParams }: { params: Prom
   const { m } = await searchParams;
   const r = await validReset(token);
   return (
-    <Shell showLogout={false}>
+    <Shell showLogout={false} active="/login">
       <div className="card" style={{ maxWidth: 440, margin: '24px auto' }}>
         {r ? (
           <form action={setPassword} className="form">

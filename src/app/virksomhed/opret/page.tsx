@@ -32,7 +32,7 @@ async function signup(fd: FormData) {
 export default async function CompanySignup({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
   const { m } = await searchParams;
   return (
-    <Shell showLogout={false} nav={[{ href: '/login', label: 'Log ind' }]}>
+    <Shell showLogout={false} active="/bestil">
       <div className="card" style={{ maxWidth: 640, margin: '0 auto' }}>
         <form action={signup} className="form">
           <h1 style={{ fontSize: 28 }}>Opret virksomhed</h1>

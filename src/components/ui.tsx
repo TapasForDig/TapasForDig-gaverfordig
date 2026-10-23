@@ -50,7 +50,15 @@ export async function Shell({
   children: React.ReactNode;
   showLogout?: boolean;
 }) {
-  const me = showLogout ? await currentUser() : null;
+  // Offentlige sider (login, tilmelding) får den almindelige topmenu, så resten af menuen ikke forsvinder
+  if (!showLogout)
+    return (
+      <>
+        <PublicHeader active={active} />
+        <main className="wrap">{children}</main>
+      </>
+    );
+  const me = await currentUser();
   const adminVisiting = me?.role === 'admin' && area !== 'Admin';
   return (
     <>

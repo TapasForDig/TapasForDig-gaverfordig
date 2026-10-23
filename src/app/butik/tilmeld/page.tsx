@@ -36,7 +36,7 @@ async function signup(fd: FormData) {
 export default async function ShopSignup({ searchParams }: { searchParams: Promise<{ m?: string }> }) {
   const { m } = await searchParams;
   return (
-    <Shell showLogout={false} nav={[{ href: '/login', label: 'Log ind' }]}>
+    <Shell showLogout={false} active="/butik/tilmeld">
       <div className="split">
         <div className="main card">
           <form action={signup} className="form">
