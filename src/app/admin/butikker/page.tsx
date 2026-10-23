@@ -133,97 +133,86 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
         <h1>Butikker</h1>
         <Notice msg={sp.m} />
         <div className="split">
-          <section className="main card flush">
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Butik</th>
-                    <th>Status</th>
-                    <th className="num">Gaver</th>
-                    <th className="num">Valgt</th>
-                    <th>Login</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id}>
-                      <td>
-                        <b>{r.name}</b>
-                        <div className="small muted">
-                          {r.town ?? '–'} · oprettet {dato(r.created_at)}
-                        </div>
-                        <div className="small row" style={{ gap: 12, marginTop: 4 }}>
-                          <Link href={`/butik/produkter?butik=${r.id}`}>Produkter</Link>
-                          <Link href={`/butik/produkt/ny?butik=${r.id}`}>Opret gave for butikken</Link>
-                          <Link href={`/butik/min-butik?butik=${r.id}`}>Oplysninger</Link>
-                        </div>
-                      </td>
-                      <td>
-                        <Badge tone={r.status === 'approved' ? 'ok' : r.status === 'pending' ? 'warn' : 'bad'}>
-                          {r.status === 'approved' ? 'Godkendt' : r.status === 'pending' ? 'Afventer' : 'Deaktiveret'}
-                        </Badge>
-                      </td>
-                      <td className="num small">
-                        <b>{r.approved}</b> godkendt
-                        {r.pending > 0 && <div style={{ color: 'var(--warn)' }}>{r.pending} venter</div>}
-                        {r.products - r.approved - r.pending > 0 && <div className="muted">{r.products - r.approved - r.pending} kladder</div>}
-                      </td>
-                      <td className="num">{r.chosen}</td>
-                      <td className="small">
-                        {(r.users ?? []).map((x) => (
-                          <form key={x.id} action={resend} className="stack-s" style={{ gap: 2 }}>
-                            <span>{x.email}</span>
-                            <input type="hidden" name="user" value={x.id} />
-                            <button className="linkbtn small" style={{ textAlign: 'left' }}>
-                              Send nyt login-link
-                            </button>
-                          </form>
-                        ))}
-                        {!r.users && <span className="muted">Intet login</span>}
-                      </td>
-                      <td className="small">
-                        <details>
-                          <summary className="muted" style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                            Mere
-                          </summary>
-                          <div className="stack-s" style={{ marginTop: 8, minWidth: 190 }}>
-                            <form action={shopAction}>
-                              <input type="hidden" name="shop" value={r.id} />
-                              {r.status === 'rejected' ? (
-                                <button className="btn outline small" name="act" value="activate">
-                                  Aktivér igen
-                                </button>
-                              ) : (
-                                <button className="btn outline small" name="act" value="deactivate">
-                                  Deaktivér
-                                </button>
-                              )}
-                            </form>
-                            <form action={shopAction} className="stack-s" style={{ gap: 6 }}>
-                              <input type="hidden" name="shop" value={r.id} />
-                              {r.chosen > 0 ? (
-                                <span className="muted">Kan ikke slettes – {r.chosen} gaver er valgt. Deaktivér i stedet.</span>
-                              ) : (
-                                <>
-                                  <label className="check small">
-                                    <input type="checkbox" name="confirm" value="ja" /> Slet butik, logins og gaver
-                                  </label>
-                                  <button className="btn small" name="act" value="delete" style={{ background: 'var(--bad)', borderColor: 'var(--bad)' }}>
-                                    Slet {r.name}
-                                  </button>
-                                </>
-                              )}
-                            </form>
-                          </div>
-                        </details>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <section className="main stack-s">
+            {rows.length === 0 && <div className="card muted">Ingen butikker endnu. Invitér den første til højre.</div>}
+            {rows.map((r) => (
+              <article key={r.id} className="card shop-admin">
+                <div className="shop-admin-top">
+                  <div className="stack-s" style={{ gap: 2, minWidth: 0 }}>
+                    <div className="row" style={{ gap: 10 }}>
+                      <b style={{ fontSize: 17 }}>{r.name}</b>
+                      <Badge tone={r.status === 'approved' ? 'ok' : r.status === 'pending' ? 'warn' : 'bad'}>
+                        {r.status === 'approved' ? 'Godkendt' : r.status === 'pending' ? 'Afventer' : 'Deaktiveret'}
+                      </Badge>
+                    </div>
+                    <span className="small muted">
+                      {r.town ?? '–'} · oprettet {dato(r.created_at)}
+                    </span>
+                  </div>
+                  <div className="shop-admin-stats small">
+                    <span>
+                      <b>{r.approved}</b> godkendte gaver
+                    </span>
+                    {r.pending > 0 && <span style={{ color: 'var(--warn)' }}>{r.pending} venter</span>}
+                    {r.products - r.approved - r.pending > 0 && <span className="muted">{r.products - r.approved - r.pending} kladder</span>}
+                    <span>
+                      <b>{r.chosen}</b> valgt
+                    </span>
+                  </div>
+                </div>
+
+                <div className="shop-admin-bottom small">
+                  <div className="row" style={{ gap: 16 }}>
+                    <Link href={`/butik/produkter?butik=${r.id}`}>Produkter</Link>
+                    <Link href={`/butik/produkt/ny?butik=${r.id}`}>Opret gave</Link>
+                    <Link href={`/butik/min-butik?butik=${r.id}`}>Oplysninger</Link>
+                  </div>
+                  <div className="row" style={{ gap: 14 }}>
+                    {(r.users ?? []).map((x) => (
+                      <form key={x.id} action={resend} className="row" style={{ gap: 8 }}>
+                        <span className="muted">{x.email}</span>
+                        <input type="hidden" name="user" value={x.id} />
+                        <button className="linkbtn small">Send nyt login-link</button>
+                      </form>
+                    ))}
+                    {!r.users && <span className="muted">Intet login</span>}
+                  </div>
+                </div>
+
+                <details className="shop-admin-more small">
+                  <summary>Deaktivér eller slet</summary>
+                  <div className="row" style={{ gap: 16, alignItems: 'flex-start', marginTop: 10 }}>
+                    <form action={shopAction}>
+                      <input type="hidden" name="shop" value={r.id} />
+                      {r.status === 'rejected' ? (
+                        <button className="btn outline small" name="act" value="activate">
+                          Aktivér igen
+                        </button>
+                      ) : (
+                        <button className="btn outline small" name="act" value="deactivate">
+                          Deaktivér
+                        </button>
+                      )}
+                    </form>
+                    <form action={shopAction} className="row" style={{ gap: 10 }}>
+                      <input type="hidden" name="shop" value={r.id} />
+                      {r.chosen > 0 ? (
+                        <span className="muted">Kan ikke slettes – {r.chosen === 1 ? '1 gave er' : `${r.chosen} gaver er`} valgt. Deaktivér i stedet.</span>
+                      ) : (
+                        <>
+                          <label className="check small">
+                            <input type="checkbox" name="confirm" value="ja" /> Ja, slet butik, logins og gaver
+                          </label>
+                          <button className="btn small" name="act" value="delete" style={{ background: 'var(--bad)', borderColor: 'var(--bad)' }}>
+                            Slet butik
+                          </button>
+                        </>
+                      )}
+                    </form>
+                  </div>
+                </details>
+              </article>
+            ))}
           </section>
           <aside className="side">
             <form action={invite} className="card form">

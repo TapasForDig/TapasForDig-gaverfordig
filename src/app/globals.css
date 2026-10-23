@@ -423,3 +423,10 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
   .deadline-inner { flex-wrap: nowrap; padding: 10px 16px; font-size: 13px; gap: 12px; }
   .deadline-bar .extra { display: none; }
 }
+
+/* Admin: butiksliste */
+.shop-admin { display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; }
+.shop-admin-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; align-items: flex-start; }
+.shop-admin-stats { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.shop-admin-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.shop-admin-more summary { cursor: pointer; color: var(--muted); width: fit-content; }
