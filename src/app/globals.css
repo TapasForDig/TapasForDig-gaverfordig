@@ -332,6 +332,13 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .deadline-bar .sep { opacity: .5; margin: 0 10px; }
 .deadline-bar a { color: #fff; font-weight: 700; white-space: nowrap; }
 
+.band { position: relative; border-radius: var(--radius); overflow: hidden; aspect-ratio: 16 / 7; min-height: 280px; background: var(--green-dark); }
+.band img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.band::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(20,30,24,.78) 0%, rgba(20,30,24,.35) 55%, rgba(20,30,24,0) 100%); }
+.band-text { position: absolute; z-index: 1; left: 0; top: 0; bottom: 0; max-width: 480px; padding: 36px; display: flex; flex-direction: column; justify-content: center; gap: 10px; color: #fff; }
+.band-text h2 { color: #fff; font-size: clamp(24px, 3vw, 34px); }
+.band-text p { margin: 0; font-size: 16px; opacity: .92; }
+
 /* Billedguide */
 .guide-specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; }
 .guide-specs b { font-size: 18px; }

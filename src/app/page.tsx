@@ -16,7 +16,12 @@ export default async function Home() {
     getSetting('forside_overskrift'),
     getSetting('forside_undertekst'),
   ]);
-  const heroCaption = await getSetting('forside_hero_tekst');
+  const [heroCaption, band, bandTitle, bandText] = await Promise.all([
+    getSetting('forside_hero_tekst'),
+    getSetting('forside_baand_billede'),
+    getSetting('forside_baand_overskrift'),
+    getSetting('forside_baand_tekst'),
+  ]);
   const next = deliveryWeeks(s).find((w) => w.available);
   const demo = process.env.NO_DEMO !== '1';
   const fmt = (iso: string) => new Date(iso).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' });
@@ -108,6 +113,16 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {band && (
+          <section className="band">
+            <img src={band} alt="" />
+            <div className="band-text">
+              <h2>{bandTitle || 'Gaver med lokal sjæl'}</h2>
+              <p>{bandText || 'Hver gave kommer fra en butik i Vejen Kommune. Når I giver en gave herfra, bliver pengene i lokalsamfundet.'}</p>
+            </div>
+          </section>
+        )}
 
         <section id="saadan" className="stack-s">
           <h2 style={{ fontSize: 24 }}>Sådan virker gavekortet</h2>

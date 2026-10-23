@@ -12,6 +12,7 @@ import { adminNav } from '../nav';
 // Forsidens billeder og tekster. Billederne gemmes som almindelige indstillinger (URL).
 const IMAGES: [string, string, string][] = [
   ['forside_hero_billede', 'Stort billede øverst til højre', '1600 × 1200 px (4:3), liggende. Et billede, der sætter Vejen Kommune i fokus – fx en gade, et torv eller en butik i Brørup/Vejen. Hold det vigtigste midt i billedet.'],
+  ['forside_baand_billede', 'Bredt bånd midt på siden', '1600 × 700 px (16:7), bredt. Et lokalt motiv – teksten ligger i venstre side, så hold motivet til højre.'],
   ['forside_fritvalg_billede', 'Indgang 1: Frit valg', '1600 × 1000 px (16:10)'],
   ['forside_webshop_billede', 'Indgang 2: Vælg selv i webshoppen', '1600 × 1000 px (16:10)'],
   ['forside_gaveaesker_billede', 'Indgang 3: Gaveæsker og julekalendere', '1600 × 1000 px (16:10)'],
@@ -19,6 +20,8 @@ const IMAGES: [string, string, string][] = [
 const TEXTS: [string, string, string][] = [
   ['forside_overskrift', 'Overskrift', 'Giv en gave, der bliver i lokalsamfundet'],
   ['forside_hero_tekst', 'Lille tekst på billedet (fx "Brørup Torv")', ''],
+  ['forside_baand_overskrift', 'Overskrift på båndet', 'Gaver med lokal sjæl'],
+  ['forside_baand_tekst', 'Tekst på båndet', 'Hver gave kommer fra en butik i Vejen Kommune. Når I giver en gave herfra, bliver pengene i lokalsamfundet.'],
   ['forside_undertekst', 'Tekst under overskriften', 'Jeres medarbejdere vælger selv deres gave blandt varer fra lokale butikker. Vi samler, pakker med navn og leverer det hele til jer.'],
 ];
 
@@ -67,7 +70,7 @@ export default async function FrontPageAdmin({ searchParams }: { searchParams: P
           {TEXTS.map(([key, label, def], i) => (
             <div key={key} className="field">
               <label htmlFor={key}>{label}</label>
-              {key.endsWith('undertekst') ? (
+              {key.endsWith('undertekst') || key === 'forside_baand_tekst' ? (
                 <textarea id={key} name={key} defaultValue={texts[i] || def} style={{ minHeight: 80 }} />
               ) : (
                 <input id={key} name={key} type="text" defaultValue={texts[i] || def} />
@@ -81,7 +84,7 @@ export default async function FrontPageAdmin({ searchParams }: { searchParams: P
           <div className="tiles">
             {IMAGES.map(([key, label, hint], i) => (
               <div key={key} className="stack-s">
-                <ImageUpload name={key} current={imgs[i] || null} label={label} aspect={key === 'forside_hero_billede' ? '4 / 3' : '16 / 10'} />
+                <ImageUpload name={key} current={imgs[i] || null} label={label} aspect={key === 'forside_hero_billede' ? '4 / 3' : key === 'forside_baand_billede' ? '16 / 7' : '16 / 10'} />
                 <span className="hint">{hint}</span>
                 {imgs[i] && (
                   <label className="check small">
