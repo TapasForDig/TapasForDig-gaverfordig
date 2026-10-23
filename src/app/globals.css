@@ -263,9 +263,8 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .modal .product .body { text-align: left; }
 
 /* Forside: tre indgange */
-.paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.path { display: flex; flex-direction: column; gap: 12px; padding: 0 0 28px; border-right: 1px solid var(--line-soft); }
-.path:last-child { border-right: 0; }
+.paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.path { display: flex; flex-direction: column; gap: 12px; padding: 0 0 28px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .path .visual { aspect-ratio: 16 / 10; display: flex; align-items: center; justify-content: center; color: #fff; }
 .path .visual svg { width: 72px; height: 72px; }
 .path h3 { font-size: 24px; font-weight: 700; padding: 8px 28px 0; }
