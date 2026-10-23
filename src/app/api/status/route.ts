@@ -20,6 +20,11 @@ export async function GET() {
     database_fejl: error,
     admin_email_sat: !!email,
     admin_password_sat: !!process.env.ADMIN_PASSWORD?.trim(),
+    // Maskeret, så man kan se om det er den forventede mail: ma***@vinfordig.dk
+    admin_email_maskeret: email ? email.replace(/^(.{2}).*(@.*)$/, '$1***$2') : null,
+    admin_email_ligner_skabelon: !!email && /[\[\]"' ]/.test(email),
+    admin_password_ligner_skabelon: /[\[\]]|adgangskode/i.test(process.env.ADMIN_PASSWORD ?? ''),
+    admin_password_har_anfoerselstegn: /^["'].*["']$/.test(process.env.ADMIN_PASSWORD?.trim() ?? ''),
     admin_bruger_findes: adminExists,
     antal_admins: admins,
     supabase_url_sat: !!process.env.SUPABASE_URL,
