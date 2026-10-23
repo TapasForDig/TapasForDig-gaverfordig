@@ -32,7 +32,7 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
       <div className="print-sheet card stack">
         <div className="row between">
           <div className="stack-s">
-            <div style={{ fontWeight: 700, letterSpacing: '.04em' }}>GAVER FOR DIG · AFLEVERINGSSEDDEL</div>
+            <img src="/logo.png" alt="Gaver For Dig" width={195} height={29} /><div style={{ fontWeight: 700, letterSpacing: '.04em' }}>AFLEVERINGSSEDDEL</div>
             <h1 style={{ fontSize: 30 }}>{shop.name}</h1>
             <div>
               Seddel <b>{h.code}</b> · {total} gaver

@@ -12,8 +12,7 @@ export default async function Home() {
       <header className="header">
         <div className="header-inner">
           <Link href="/" className="logo">
-            <b>GAVER FOR DIG</b>
-            <span>lokale firmagaver</span>
+            <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
           </Link>
           <nav className="nav" aria-label="Hovedmenu">
             <a href="#saadan">Sådan virker det</a>

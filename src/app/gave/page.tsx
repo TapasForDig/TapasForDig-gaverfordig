@@ -76,7 +76,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
       <header className="header">
         <div className="header-inner">
           <span className="logo">
-            <b>GAVER FOR DIG</b>
+            <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
             <span>gave fra {o.company_name}</span>
           </span>
           <span className="small" style={{ color: 'var(--green-light)' }}>

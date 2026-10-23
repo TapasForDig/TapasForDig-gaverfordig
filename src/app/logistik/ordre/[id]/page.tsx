@@ -94,7 +94,7 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
       <section className="print-sheet card stack">
         <div className="row between">
           <div>
-            <div style={{ fontWeight: 700, letterSpacing: '.04em' }}>GAVER FOR DIG · PAKKESEDDEL</div>
+            <img src="/logo.png" alt="Gaver For Dig" width={195} height={29} /><div style={{ fontWeight: 700, letterSpacing: '.04em' }}>PAKKESEDDEL</div>
             <h1 style={{ fontSize: 30 }}>{o.company_name}</h1>
             <div>
               {o.title} · {items.length} gaver
@@ -161,7 +161,7 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
         <div className="labels">
           {items.map((i) => (
             <div key={i.id} className="label-card">
-              <div style={{ fontSize: 11, letterSpacing: '.06em', fontWeight: 700 }}>GAVER FOR DIG</div>
+              <img src="/logo.png" alt="Gaver For Dig" width={110} height={17} />
               <div style={{ fontSize: 18, fontWeight: 700, marginTop: 6 }}>{i.name}</div>
               <div className="small">
                 {o.company_name}

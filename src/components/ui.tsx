@@ -24,7 +24,7 @@ export function Shell({
       <header className="header">
         <div className="header-inner">
           <Link href="/" className="logo">
-            <b>GAVER FOR DIG</b>
+            <img className="logo-img" src="/logo-white.png" alt="Gaver For Dig" width={162} height={24} />
             {area && <span>{area}</span>}
           </Link>
           <nav className="nav" aria-label="Hovedmenu">
