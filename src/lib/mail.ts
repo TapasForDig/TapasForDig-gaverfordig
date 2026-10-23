@@ -13,6 +13,7 @@ export async function sendMail(to: string, subject: string, body: string) {
         body: JSON.stringify({
           from: process.env.MAIL_FROM || 'Gaver For Dig <gaver@gaverfordig.dk>',
           to: [to],
+          ...(process.env.MAIL_REPLY_TO ? { reply_to: process.env.MAIL_REPLY_TO } : {}),
           subject,
           text: body,
         }),
