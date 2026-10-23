@@ -11,9 +11,9 @@ export async function sendMail(to: string, subject: string, body: string) {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: process.env.MAIL_FROM || 'Gaver For Dig <gaver@gaverfordig.dk>',
+          from: process.env.MAIL_FROM || 'Gaver For Dig <info@gaverfordig.dk>',
           to: [to],
-          ...(process.env.MAIL_REPLY_TO ? { reply_to: process.env.MAIL_REPLY_TO } : {}),
+          reply_to: process.env.MAIL_REPLY_TO || 'info@gaverfordig.dk',
           subject,
           text: body,
         }),

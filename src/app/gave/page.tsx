@@ -135,7 +135,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
   const needInfo = open && (!r.name || (o.delivery_mode === 'home' && !r.address) || sp.ret === '1');
   const all = await giftsFor(o.price_category_id, r.chosen_product_id);
   const [phone, mail] = await Promise.all([getSetting('kontakt_telefon'), getSetting('kontakt_email')]);
-  const contact = { phone: phone || '71 99 75 74', email: mail || 'mail@vinfordig.dk' };
+  const contact = { phone: phone || '71 99 75 74', email: mail || 'info@gaverfordig.dk' };
   const kind = sp.k && (KINDS as readonly string[]).includes(sp.k) ? sp.k : 'Alle';
   const shown = kind === 'Alle' ? all : all.filter((p) => p.kind === kind);
   const kindsInUse = KINDS.filter((k) => all.some((p) => p.kind === k));

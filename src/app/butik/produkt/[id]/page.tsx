@@ -38,7 +38,7 @@ export default async function ProductGuide({ params, searchParams }: { params: P
           kinds={KINDS}
           groups={cats.map((c) => ({ id: c.id, value: c.value_kr }))}
           backHref={`/butik/produkter${q0}`}
-          contact={{ phone: phone || '71 99 75 74', email: mail || 'mail@vinfordig.dk' }}
+          contact={{ phone: phone || '71 99 75 74', email: mail || 'info@gaverfordig.dk' }}
           product={
             p
               ? {

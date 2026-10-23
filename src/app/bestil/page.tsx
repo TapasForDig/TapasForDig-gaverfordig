@@ -73,7 +73,7 @@ export default async function OrderPage() {
         groups={view}
         weeks={deliveryWeeks(s)}
         settings={{ homeFee: s.homeFee, wrapFee: s.wrapFee, minQty: s.minQty }}
-        contact={{ phone: phone || '71 99 75 74', email: mail || 'mail@vinfordig.dk' }}
+        contact={{ phone: phone || '71 99 75 74', email: mail || 'info@gaverfordig.dk' }}
         defaults={defaults}
         action={placeOrder}
       />

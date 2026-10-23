@@ -4,7 +4,7 @@ export async function GET(req: Request) {
   if (cvr.length !== 8) return Response.json({ error: 'CVR skal være 8 cifre' }, { status: 400 });
   try {
     const res = await fetch(`https://cvrapi.dk/api?search=${cvr}&country=dk`, {
-      headers: { 'User-Agent': 'gaverfordig.dk - firmagaver - mail@vinfordig.dk' },
+      headers: { 'User-Agent': 'gaverfordig.dk - firmagaver - info@gaverfordig.dk' },
       cache: 'no-store',
     });
     const data = await res.json();
