@@ -513,3 +513,8 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .variant-cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-weight: 600; font-size: 14px; flex-wrap: wrap; }
 .variant-pick { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
 .variant-pick select { width: 100%; }
+
+/* Lead-opsamler */
+.lead { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 28px; align-items: start; padding: 28px; position: relative; }
+.lead-text h2 { font-size: 26px; }
+@media (max-width: 860px) { .lead { grid-template-columns: 1fr; padding: 22px 18px; } }

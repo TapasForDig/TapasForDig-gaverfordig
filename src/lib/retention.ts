@@ -3,6 +3,7 @@ import { logEvent, one, q } from './db';
 // Sletteregler (se privatlivspolitikken og databehandleraftalen)
 export const RECIPIENT_MONTHS = 6; // medarbejderoplysninger: 6 måneder efter levering
 export const OUTBOX_MONTHS = 3; // kopier af sendte mails
+export const LEAD_MONTHS = 24; // henvendelser/leads
 
 export interface CleanupResult {
   recipients: number;
@@ -24,6 +25,7 @@ export async function runCleanup(actor = 'system'): Promise<CleanupResult> {
   const mails = await q<{ id: number }>(`delete from outbox where created_at < now() - interval '${OUTBOX_MONTHS} months' returning id`);
   const sess = await q<{ token: string }>(`delete from sessions where expires_at < now() returning token`);
   await q(`delete from password_resets where expires_at < now() - interval '7 days'`);
+  await q(`delete from leads where created_at < now() - interval '${LEAD_MONTHS} months'`);
   await q(`delete from rate_hits where at < now() - interval '1 day'`);
   if (rec.length || mails.length) await logEvent(actor, 'oprydning', null, 'persondata slettet', `${rec.length} medarbejdere anonymiseret, ${mails.length} mails slettet`);
   await q(`insert into settings (key, value) values ('oprydning_sidst', now()::text) on conflict (key) do update set value = excluded.value`);

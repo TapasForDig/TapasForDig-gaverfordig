@@ -17,6 +17,8 @@ export default async function Privacy() {
             ['Virksomheder, der bestiller', 'Firmanavn, CVR, EAN, adresse, kontaktpersonens navn, e-mail og telefon', 'Levere ordren, sende gavekoder og fakturere', 'Aftale (art. 6, stk. 1, litra b) og bogføringsloven (litra c)', 'Ordre- og fakturadata i 5 år efter regnskabsårets udløb'],
             ['Butikker', 'Butikkens navn, CVR, adresse, kontaktperson, e-mail, telefon, logo og beskrivelse', 'Samarbejdet om gaverne, afregning og visning på siden med deltagende butikker', 'Aftale (litra b)', 'Så længe samarbejdet varer. Afregninger i 5 år'],
             ['Medarbejdere, der får en julegave', 'Navn, e-mail, gavekode, valgt gave og evt. hjemmeadresse og telefon', 'Lade dig vælge og modtage din gave', 'Vi behandler oplysningerne på din arbejdsgivers vegne', 'Slettes 6 måneder efter levering'],
+            ['Dig, der beder os kontakte dig', 'Navn, firma eller butik, e-mail, telefon, antal medarbejdere eller by og din besked', 'Besvare din henvendelse og følge op', 'Legitim interesse i at svare dig (litra f)', 'Slettes senest 24 måneder efter henvendelsen'],
+            ['Dig, der har sagt ja til nyheder', 'Navn, e-mail, firma og telefon', 'Sende nyheder, gaveidéer og tilbud på e-mail', 'Dit samtykke (litra a)', 'Til du afmelder dig – det kan du via linket i hver mail'],
             ['Besøgende på siden', 'Teknisk nødvendige cookies til login', 'Få siden til at virke', 'Legitim interesse (litra f)', 'Login: 30 dage. Indkøbskurven gemmes kun i din egen browser'],
           ],
         },
@@ -38,6 +40,7 @@ export default async function Privacy() {
             'Butikkerne får kun antal og type af gaver og virksomhedens navn – aldrig medarbejdernes oplysninger.',
             'Fragtfirmaer får navn, adresse og telefon, når en gave skal sendes hjem.',
             'IT-leverandører, der driver hjemmesiden, databasen og mails. De må kun bruge oplysningerne til at levere deres tjeneste til os.',
+            'Har du sagt ja til nyheder, ligger dit navn, din e-mail, dit firma og dit telefonnummer hos vores nyhedsbrevssystem Klaviyo (Klaviyo Inc., USA). Medarbejderes oplysninger sendes aldrig til Klaviyo.',
             'Myndigheder, hvis loven kræver det.',
           ],
         },
@@ -49,7 +52,7 @@ export default async function Privacy() {
       'Dine rettigheder',
       [
         `Du har ret til at få indsigt i dine oplysninger og få dem rettet eller slettet. Du kan også gøre indsigelse, få begrænset behandlingen eller få dine data udleveret. Skriv til ${c.email}, så svarer vi inden for en måned.`,
-        'Er du utilfreds, kan du klage til Datatilsynet, Carl Jacobsens Vej 35, 2500 Valby, datatilsynet.dk.',
+        'Du kan til enhver tid trække dit samtykke til nyheder tilbage via afmeldingslinket i mailen eller ved at skrive til os. Er du utilfreds, kan du klage til Datatilsynet, Carl Jacobsens Vej 35, 2500 Valby, datatilsynet.dk.',
       ],
     ],
   ];

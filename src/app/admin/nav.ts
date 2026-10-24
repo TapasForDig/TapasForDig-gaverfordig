@@ -5,6 +5,7 @@ export const adminNav = [
   { href: '/admin/forside', label: 'Forside' },
   { href: '/admin/saeson', label: 'Sæson og priser' },
   { href: '/admin/afregning', label: 'Fakturering' },
+  { href: '/admin/leads', label: 'Leads' },
   { href: '/admin/mails', label: 'Mails' },
   { href: '/virksomhed', label: 'Virksomheder' },
   { href: '/logistik', label: 'Logistik' },

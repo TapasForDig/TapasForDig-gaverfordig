@@ -216,6 +216,23 @@ create table if not exists product_variants (
 );
 alter table recipients add column if not exists variant_id integer references product_variants(id) on delete set null;
 alter table recipients add column if not exists variant_label text;
+create table if not exists leads (
+  id serial primary key,
+  kind text not null check (kind in ('virksomhed','butik')),
+  name text not null,
+  company text,
+  email text not null,
+  phone text,
+  employees integer,
+  town text,
+  message text,
+  consent boolean not null default false,
+  consent_text text,
+  source text,
+  klaviyo text,
+  status text not null default 'ny',
+  created_at timestamptz not null default now()
+);
 create table if not exists rate_hits (key text not null, at timestamptz not null default now());
 create index if not exists rate_hits_key_at on rate_hits (key, at);
 alter table purchases add column if not exists submit_key text unique;

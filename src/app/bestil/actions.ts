@@ -1,5 +1,6 @@
 'use server';
 
+import { subscribeLead } from '@/lib/klaviyo';
 import { redirect } from 'next/navigation';
 import { currentUser, hashPassword, newToken, startSession } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
@@ -173,6 +174,15 @@ export async function placeOrder(_prev: OrderState, fd: FormData): Promise<Order
   }
   const purchase = (await getPurchase(purchaseId))!;
   await sendConfirmation(purchase);
+  if (v.newsletter === '1') {
+    // Samtykke til nyhedsbrev → lead + Klaviyo-listen for virksomheder
+    const name = `${v.contact_first} ${v.contact_last}`.trim();
+    const k = await subscribeLead('virksomhed', { email: contactEmail, name, company: v.company_name, phone: v.contact_phone, properties: { kunde: true } });
+    await q(
+      `insert into leads (kind, name, company, email, phone, consent, consent_text, source, klaviyo, status) values ('virksomhed',$1,$2,$3,$4,true,$5,'bestilling',$6,'kunde')`,
+      [name, v.company_name, contactEmail, v.contact_phone || null, 'Ja tak til nyhedsbrev med gaveidéer før højtiderne', k],
+    );
+  }
   if (codesDelivery === 'email') {
     if (!purchase.hold) await sendCodesMail(purchase);
   } else {

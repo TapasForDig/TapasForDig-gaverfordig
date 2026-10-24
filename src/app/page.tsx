@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { LeadForm } from '@/components/LeadForm';
 import { TwoThings } from '@/components/TwoThings';
 import { PublicHeader } from '@/components/ui';
 import { categories, getSetting } from '@/lib/gifts';
@@ -9,7 +10,8 @@ import { publicShops } from '@/lib/shops';
 
 const TOWNS = ['Brørup', 'Vejen', 'Rødding', 'Holsted', 'Askov', 'Lintrup', 'Gesten', 'Jels', 'Skodborg', 'Bække', 'Hovborg', 'Føvling', 'Lindknud', 'Glejbjerg', 'Andst', 'Malt'];
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ lead?: string }> }) {
+  const sp = await searchParams;
   const [cats, s, hero, img1, img2, img3, title, intro] = await Promise.all([
     categories(),
     shopSettings(),
@@ -219,6 +221,13 @@ export default async function Home() {
             </div>
           )}
         </section>
+        <LeadForm
+          kind="virksomhed"
+          returnTo="/"
+          status={sp.lead}
+          title="Vil I høre mere?"
+          intro="Skriv jeres oplysninger, så ringer eller skriver vi og hjælper med at finde det rette gavebeløb og den rette leveringsuge. Det er helt uforpligtende."
+        />
       </main>
     </>
   );

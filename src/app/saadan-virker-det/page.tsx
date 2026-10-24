@@ -6,13 +6,15 @@ import { PublicHeader } from '@/components/ui';
 import { kr } from '@/lib/format';
 import { categories } from '@/lib/gifts';
 import { incl, shopSettings } from '@/lib/purchase';
+import { LeadForm } from '@/components/LeadForm';
 
 export const metadata: Metadata = {
   title: 'Sådan virker det – Gaver For Dig',
   description: 'Sådan fungerer lokale firmajulegaver: I bestiller, medarbejderne vælger selv en gave fra lokale butikker, og vi pakker og leverer samlet.',
 };
 
-export default async function HowItWorks() {
+export default async function HowItWorks({ searchParams }: { searchParams: Promise<{ lead?: string }> }) {
+  const sp = await searchParams;
   const [s, cats] = await Promise.all([shopSettings(), categories()]);
   const low = cats.length ? Math.min(...cats.map((c) => c.value_kr)) : 300;
   const high = cats.length ? Math.max(...cats.map((c) => c.value_kr)) : 1100;
@@ -237,6 +239,14 @@ export default async function HowItWorks() {
             </div>
           </div>
         </section>
+
+        <LeadForm
+          kind="virksomhed"
+          returnTo="/saadan-virker-det"
+          status={sp.lead}
+          title="Spørgsmål? Vi ringer gerne"
+          intro="Efterlad dit navn og nummer, så tager vi en snak om antal medarbejdere, gavebeløb og levering. Helt uforpligtende."
+        />
 
         <section className="dark-card row between" style={{ gap: 20 }}>
           <div className="stack-s" style={{ flex: '1 1 420px' }}>

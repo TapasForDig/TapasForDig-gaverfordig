@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicHeader } from '@/components/ui';
 import { publicShops } from '@/lib/shops';
+import { LeadForm } from '@/components/LeadForm';
 
 export const metadata: Metadata = { title: 'Deltagende butikker – Gaver For Dig' };
 
-export default async function Shops({ searchParams }: { searchParams: Promise<{ by?: string }> }) {
+export default async function Shops({ searchParams }: { searchParams: Promise<{ by?: string; lead?: string }> }) {
   const sp = await searchParams;
   const all = await publicShops();
   const towns = [...new Set(all.map((s) => s.town?.trim()).filter((t): t is string => !!t))].sort((a, b) => a.localeCompare(b, 'da'));
@@ -81,6 +82,13 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
             </div>
           </div>
         </section>
+        <LeadForm
+          kind="butik"
+          returnTo="/butikker"
+          status={sp.lead}
+          title="Har du en butik i Vejen Kommune?"
+          intro="Vil du høre mere, før du tilmelder dig? Skriv dine oplysninger, så kontakter vi dig og fortæller, hvordan det fungerer – og hvad det kræver af dig."
+        />
       </main>
     </>
   );
