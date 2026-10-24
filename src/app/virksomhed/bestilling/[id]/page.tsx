@@ -5,6 +5,7 @@ import { logEvent, one, q } from "@/lib/db";
 import { dato, datoTid, kr, str } from "@/lib/format";
 import { giftsFor } from "@/lib/gifts";
 import { sendMail } from "@/lib/mail";
+import { saveImage } from "@/lib/storage";
 import {
   assignRecipients,
   codeLink,
@@ -90,6 +91,34 @@ async function remind(fd: FormData) {
   );
 }
 
+async function saveLogo(fd: FormData) {
+  "use server";
+  const { u, p } = await ownPurchase(Number(fd.get("id")));
+  if (fd.get("remove") === "1") {
+    await q("update companies set logo = null where id = $1", [p.company_id]);
+    back(p.id, "Logoet er fjernet");
+  }
+  const f = fd.get("logo");
+  if (!(f instanceof File) || f.size === 0) back(p.id, "!Vælg en billedfil med jeres logo");
+  let url = "";
+  try {
+    url = await saveImage(f as File);
+  } catch (e) {
+    back(p.id, "!" + (e as Error).message);
+  }
+  await q("update companies set logo = $1 where id = $2", [url, p.company_id]);
+  await logEvent(u.email, "purchase", p.id, "logo uploadet");
+  back(p.id, "Logoet er gemt. Det vises i gaveshoppen og på de printede gavekort.");
+}
+
+async function setAutoRemind(fd: FormData) {
+  "use server";
+  const { p } = await ownPurchase(Number(fd.get("id")));
+  const on = fd.get("on") === "1";
+  await q("update purchases set auto_remind = $1 where id = $2", [on, p.id]);
+  back(p.id, on ? "Automatiske påmindelser er slået til" : "Automatiske påmindelser er slået fra");
+}
+
 async function resendCodes(fd: FormData) {
   "use server";
   const { u, p } = await ownPurchase(Number(fd.get("id")));
@@ -132,6 +161,7 @@ export default async function PurchasePage({
   const sp = await searchParams;
   const { u, p } = await ownPurchase(Number(id));
   const codes = await purchaseCodes(p.id);
+  const company = await one<{ logo: string | null }>("select logo from companies where id = $1", [p.company_id]);
   const hidden = p.hold && u.role !== "admin";
   const lines = await q<{
     id: number;
@@ -349,6 +379,18 @@ export default async function PurchasePage({
             {open && (
               <div className="card stack-s">
                 <h2>Påmindelser</h2>
+                <form action={setAutoRemind} className="stack-s">
+                  <input type="hidden" name="id" value={p.id} />
+                  <input type="hidden" name="on" value={p.auto_remind ? "0" : "1"} />
+                  <p className="small muted" style={{ margin: 0 }}>
+                    {p.auto_remind
+                      ? "Vi minder automatisk dem, der ikke har valgt, 7 dage og 2 dage før fristen."
+                      : "Automatiske påmindelser er slået fra."}
+                  </p>
+                  <button className="btn small outline" type="submit">
+                    {p.auto_remind ? "Slå automatiske påmindelser fra" : "Slå automatiske påmindelser til"}
+                  </button>
+                </form>
                 {sentTo > 0 && (
                   <form action={remind}>
                     <input type="hidden" name="id" value={p.id} />
@@ -365,6 +407,36 @@ export default async function PurchasePage({
                 </form>
               </div>
             )}
+            {chosen > 0 && (
+              <div className="card stack-s impact-teaser">
+                <h2>Jeres lokale effekt</h2>
+                <p className="small" style={{ margin: 0 }}>
+                  Se, hvor mange penge jeres julegaver holder i butikkerne i Vejen Kommune – og del det med jeres medarbejdere og netværk.
+                </p>
+                <Link className="btn outline" href={`/virksomhed/bestilling/${p.id}/effekt`}>
+                  Se effektrapporten
+                </Link>
+              </div>
+            )}
+            <div className="card">
+              <form action={saveLogo} className="form">
+                <h2>Jeres logo</h2>
+                <input type="hidden" name="id" value={p.id} />
+                <p className="hint">Vises i gaveshoppen og på de printede gavekort. PNG med gennemsigtig baggrund er bedst.</p>
+                {company?.logo && <img className="logo-preview" src={company.logo} alt="Jeres logo" />}
+                <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" aria-label="Logo" />
+                <div className="row">
+                  <button className="btn outline" type="submit">
+                    {company?.logo ? "Skift logo" : "Upload logo"}
+                  </button>
+                  {company?.logo && (
+                    <button className="btn small outline" type="submit" name="remove" value="1">
+                      Fjern
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
             {lines.map((l, i) => (
               <div key={l.id} className="card">
                 <form action={saveLine} className="form">
@@ -374,15 +446,16 @@ export default async function PurchasePage({
                   <input type="hidden" name="id" value={p.id} />
                   <input type="hidden" name="order" value={l.id} />
                   <div className="field">
-                    <label htmlFor={`g-${l.id}`}>Hilsen i gaveshoppen</label>
+                    <label htmlFor={`g-${l.id}`}>Hilsen til medarbejderne</label>
                     <textarea
                       id={`g-${l.id}`}
                       name="greeting"
                       defaultValue={l.greeting ?? ""}
                       disabled={!open}
                       style={{ minHeight: 80 }}
-                      placeholder="Fx: Tak for en stærk indsats i år – glædelig jul!"
+                      placeholder="Fx: Tak for en stærk indsats i år – glædelig jul! Hilsen Anne, direktør"
                     />
+                    <span className="hint">Vises i gaveshoppen, i mailen med gavekoden og på de printede gavekort.</span>
                   </div>
                   <div className="field">
                     <label htmlFor={`d-${l.id}`}>Standardgave</label>

@@ -49,6 +49,7 @@ export interface Order {
   id: number;
   company_id: number;
   company_name: string;
+  company_logo?: string | null;
   season_id: number;
   price_category_id: number;
   category_name: string;
@@ -133,7 +134,7 @@ export async function giftsFor(categoryId: number, includeProductId: number | nu
 
 export async function getOrder(id: number): Promise<Order | undefined> {
   return one<Order>(
-    `select o.*, c.name as company_name, pc.name as category_name, pc.value_kr
+    `select o.*, c.name as company_name, c.logo as company_logo, pc.name as category_name, pc.value_kr
        from gift_orders o join companies c on c.id = o.company_id
        join price_categories pc on pc.id = o.price_category_id
       where o.id = $1`,

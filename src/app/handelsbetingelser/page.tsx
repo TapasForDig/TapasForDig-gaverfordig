@@ -1,3 +1,4 @@
+import { BYTTEFRIST } from '@/lib/legal';
 import type { Metadata } from 'next';
 import { PublicHeader } from '@/components/ui';
 import { shopSettings } from '@/lib/purchase';
@@ -24,6 +25,8 @@ export default async function Terms() {
         'Hver medarbejder får en personlig gavekode og vælger én fysisk gave fra udvalget i den valgte prisgruppe. Gaven kan ikke byttes til kontanter.',
         'Medarbejderen skal vælge gave senest på den frist, der står i ordrebekræftelsen. Vælger medarbejderen ikke, leveres den standardgave, virksomheden har valgt, eller en gave, vi vælger i prisgruppen.',
         'Udvalget kan ændre sig, efterhånden som butikkerne tilføjer gaver, eller varer bliver udsolgt.',
+        'Medarbejderne kan kun vælge gaver, butikken har på lager. Når en gave er valgt, er den reserveret. Skulle en vare alligevel ikke kunne leveres, kontakter vi medarbejderen, før vi sender noget andet.',
+        `Passer gaven ikke (fx størrelse eller farve), kan den byttes i den butik, den kommer fra, frem til ${BYTTEFRIST} året efter. Medbring navnemærkaten fra gaven. Gaven kan byttes til en anden vare i butikken, men ikke til kontanter.`,
       ],
     ],
     [

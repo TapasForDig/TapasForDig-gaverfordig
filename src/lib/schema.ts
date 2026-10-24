@@ -263,6 +263,11 @@ alter table products add column if not exists net_content text;
 alter table products add column if not exists wrap_ok boolean not null default false;
 alter table products add column if not exists shelf_ok boolean not null default false;
 
+alter table companies add column if not exists logo text;
+alter table purchases add column if not exists auto_remind boolean not null default true;
+alter table purchases add column if not exists share_token text unique;
+alter table recipients add column if not exists auto_reminders integer not null default 0;
+
 create index if not exists recipients_order_idx on recipients(order_id);
 create index if not exists gift_orders_purchase_idx on gift_orders(purchase_id);
 create index if not exists recipients_product_idx on recipients(chosen_product_id);

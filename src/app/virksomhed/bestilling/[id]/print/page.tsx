@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import QRCode from 'qrcode';
 import { PrintButton } from '@/components/PrintButton';
 import { appUrl, datoTid } from '@/lib/format';
+import { one, q } from '@/lib/db';
 import { codeLink, purchaseCodes } from '@/lib/purchase';
 import { ownPurchase } from '../../access';
 
@@ -12,6 +13,8 @@ export default async function PrintCodes({ params }: { params: Promise<{ id: str
   const { u, p } = await ownPurchase(Number(id));
   if (p.hold && u.role !== 'admin') redirect(`/virksomhed/bestilling/${p.id}`);
   const codes = await purchaseCodes(p.id);
+  const company = await one<{ logo: string | null }>('select logo from companies where id = $1', [p.company_id]);
+  const greetings = new Map((await q<{ id: number; greeting: string | null }>('select id, greeting from gift_orders where purchase_id = $1', [p.id])).map((g) => [g.id, g.greeting]));
   const qrs = await Promise.all(codes.map((c) => QRCode.toDataURL(codeLink(c.token), { margin: 1, width: 160 })));
   return (
     <main className="wrap">
@@ -23,10 +26,14 @@ export default async function PrintCodes({ params }: { params: Promise<{ id: str
       <div className="giftcards">
         {codes.map((c, i) => (
           <div key={c.id} className="giftcard">
-            <img src="/logo.png" alt="Gaver For Dig" width={150} height={23} />
+            <div className="row between" style={{ flexWrap: 'nowrap' }}>
+              {company?.logo ? <img src={company.logo} alt={p.company_name} className="giftcard-logo" /> : <b>{p.company_name}</b>}
+              <img src="/logo.png" alt="Gaver For Dig" width={110} height={17} />
+            </div>
             <div className="small" style={{ marginTop: 8 }}>
               Julegave fra <b>{p.company_name}</b>
             </div>
+            {greetings.get(c.order_id) && <div className="small giftcard-greeting">{greetings.get(c.order_id)}</div>}
             <div className="row" style={{ marginTop: 10, flexWrap: 'nowrap', gap: 12 }}>
               <img src={qrs[i]} alt="" width={86} height={86} />
               <div>

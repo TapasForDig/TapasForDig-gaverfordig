@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/Icon';
 import { LeadForm } from '@/components/LeadForm';
 import { TwoThings } from '@/components/TwoThings';
+import { BYTTEFRIST } from '@/lib/legal';
 import { PublicHeader } from '@/components/ui';
 import { categories, getSetting } from '@/lib/gifts';
 import { kr } from '@/lib/format';
@@ -93,6 +94,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
 
       <main className="wrap stack" style={{ paddingTop: 0 }}>
         <TwoThings />
+        <section className="usp-strip" aria-label="Det får I kun her">
+          <div>
+            <b>Byt i butikken</b>
+            <span>Passer størrelsen ikke? Gaven kan byttes i den lokale butik frem til {BYTTEFRIST}.</span>
+          </div>
+          <div>
+            <b>Skattefri – også lokalt</b>
+            <span>Byens brede gavekort beskattes som kontanter. Vores julegaver er fysiske gaver inden for jeres beløb.</span>
+          </div>
+          <div>
+            <b>Se jeres lokale effekt</b>
+            <span>Efter jul får I en rapport over, hvor meget jeres gaver holdt i kommunens butikker – klar til at dele.</span>
+          </div>
+        </section>
 
         <section className="stack-s">
           <h2 style={{ fontSize: 28, textAlign: 'center', margin: '8px 0 12px' }}>Vælg den løsning, der passer jer bedst</h2>

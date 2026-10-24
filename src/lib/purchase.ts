@@ -142,6 +142,8 @@ export function normalizeCode(input: string): string {
 
 export interface Purchase {
   id: number;
+  auto_remind: boolean;
+  share_token: string | null;
   company_id: number;
   status: string;
   delivery_mode: 'company' | 'home';
@@ -295,7 +297,7 @@ export function inviteMail(name: string, company: string, code: string, token: s
     '',
     `${company} giver dig en julegave i år, og du vælger selv, hvad det skal være.`,
     greeting ? `\n${greeting}\n` : '',
-    'Alle gaverne kommer fra lokale butikker i Vejen Kommune.',
+    'Alle gaverne kommer fra lokale butikker i Vejen Kommune – og passer gaven ikke, kan du bytte den i butikken.',
     '',
     `Vælg din gave her: ${codeLink(token)}`,
     `Din gavekode: ${code}`,

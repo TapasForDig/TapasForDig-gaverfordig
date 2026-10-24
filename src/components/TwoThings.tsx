@@ -45,6 +45,7 @@ export function TwoThings({ cta = true }: { cta?: boolean }) {
             'Samler gaverne fra butikkerne i hele kommunen',
             'Sætter navn på hver gave – og pakker ind, hvis I ønsker det',
             'Leverer det hele samlet til jer eller hjem til medarbejderne',
+            'Passer gaven ikke, kan den byttes i butikken',
           ].map((t) => (
             <li key={t}>
               <span className="two-ok" aria-hidden="true">

@@ -1,4 +1,5 @@
 import { logEvent, one, q } from './db';
+import { runAutoReminders } from './reminders';
 
 // Sletteregler (se privatlivspolitikken og databehandleraftalen)
 export const RECIPIENT_MONTHS = 6; // medarbejderoplysninger: 6 måneder efter levering
@@ -36,5 +37,7 @@ export async function runCleanup(actor = 'system'): Promise<CleanupResult> {
 export async function cleanupIfDue() {
   const last = await one<{ value: string }>(`select value from settings where key = 'oprydning_sidst'`);
   if (last && Date.now() - new Date(last.value).getTime() < 24 * 3600 * 1000) return null;
-  return runCleanup();
+  const r = await runCleanup();
+  await runAutoReminders();
+  return r;
 }

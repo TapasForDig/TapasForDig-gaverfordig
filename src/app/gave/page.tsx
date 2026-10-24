@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BYTTEFRIST } from '@/lib/legal';
 import { redirect } from 'next/navigation';
 import { Badge, Notice, ProductImage, TopBar } from '@/components/ui';
 import { cookies } from 'next/headers';
@@ -114,7 +115,7 @@ async function choose(fd: FormData) {
     await sendMail(
       r.email,
       'Din gave er valgt',
-      `Hej ${r.name}\n\nTak! Du har valgt: ${pname} fra ${p.shop_name}.\n${o.delivery_mode === 'home' ? `Gaven sendes til ${r.address}, ${r.zip} ${r.city}.` : 'Gaven pakkes med dit navn og leveres til din arbejdsplads.'}\n\nDu kan ændre dit valg frem til ${datoTid(deadline)} med din gavekode ${r.code ?? ''}.\n\nVenlig hilsen\nGaver For Dig`,
+      `Hej ${r.name}\n\nTak! Du har valgt: ${pname} fra ${p.shop_name}.\n${o.delivery_mode === 'home' ? `Gaven sendes til ${r.address}, ${r.zip} ${r.city}.` : 'Gaven pakkes med dit navn og leveres til din arbejdsplads.'}\n\nPasser gaven ikke, kan du bytte den hos ${p.shop_name} frem til ${BYTTEFRIST}. Husk navnemærkaten.\n\nDu kan ændre dit valg frem til ${datoTid(deadline)} med din gavekode ${r.code ?? ''}.\n\nVenlig hilsen\nGaver For Dig`,
     );
   }
   redirect('/gave?m=' + encodeURIComponent(`Du har valgt ${pname}. Du får en bekræftelse på mail.`));
@@ -192,6 +193,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
       <main className="wrap stack">
         <section className="row between end" style={{ gap: 24 }}>
           <div className="stack-s" style={{ flex: '1 1 520px' }}>
+            {o.company_logo && <img className="company-logo" src={o.company_logo} alt={o.company_name} />}
             <div className="eyebrow">{o.title} fra {o.company_name}</div>
             <h1>{needInfo ? `Glædelig jul${firstName ? `, ${firstName}` : ''}!` : open ? `Hej ${firstName}. Vælg din gave.` : `Hej ${firstName}.`}</h1>
             {o.greeting && <p style={{ fontSize: 17, maxWidth: 680 }}>{o.greeting}</p>}
@@ -268,7 +270,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
                 {chosen.name}
                 {r.variant_label ? ` – ${r.variant_label}` : ''}
               </div>
-              <div className="small muted">fra {chosen.shop_name}</div>
+              <div className="small muted">fra {chosen.shop_name} · kan byttes i butikken frem til {BYTTEFRIST}</div>
             </div>
             {open && <span className="small muted">Vælg en anden gave nedenfor, hvis du skifter mening.</span>}
           </div>

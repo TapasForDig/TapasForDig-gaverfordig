@@ -1,3 +1,4 @@
+import { BYTTEFRIST } from '@/lib/legal';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Notice, Shell } from '@/components/ui';
@@ -83,7 +84,7 @@ export default async function ShopSignup({ searchParams }: { searchParams: Promi
             <label className="check">
               <input type="checkbox" name="terms" value="ja" required />
               <span>
-                Jeg accepterer samarbejdsvilkårene: Gaver For Dig køber de valgte varer af butikken til den aftalte indkøbspris og afregner efter sæsonen.
+                Jeg accepterer samarbejdsvilkårene: Gaver For Dig køber de valgte varer af butikken til den aftalte indkøbspris og afregner efter sæsonen. Medarbejdere kan bytte gaven i butikken frem til {BYTTEFRIST} mod navnemærkaten – til en anden vare, ikke kontanter.
               </span>
             </label>
             <button className="btn" type="submit">
@@ -101,6 +102,7 @@ export default async function ShopSignup({ searchParams }: { searchParams: Promi
               <li>Du opretter dine gaver i en kort guide.</li>
               <li>Vi godkender dem inden for 2 hverdage.</li>
               <li>Medarbejderne vælger. Du har intet lager hos os.</li>
+              <li>Passer en gave ikke, kan medarbejderen bytte den hos dig frem til {BYTTEFRIST} – det giver ofte et ekstra besøg i butikken.</li>
               <li>Efter vælgefristen ser du præcis, hvad der skal afleveres.</li>
               <li>Du afleverer i Brørup – gaveindpakket, hvor kunden har valgt det (30 kr. ekstra pr. stk.) – og får afregning efter sæsonen.</li>
             </ol>
