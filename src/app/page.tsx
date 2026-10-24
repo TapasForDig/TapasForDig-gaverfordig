@@ -100,8 +100,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             <span>Passer størrelsen ikke? Gaven kan byttes i den lokale butik frem til {BYTTEFRIST}.</span>
           </div>
           <div>
-            <b>Skattefri – også lokalt</b>
-            <span>Byens brede gavekort beskattes som kontanter. Vores julegaver er fysiske gaver inden for jeres beløb.</span>
+            <b>Skattefri for medarbejderne</b>
+            <span>Fysiske gaver fra lokale butikker inden for jeres beløb – efter reglerne for skattefri firmajulegaver.</span>
           </div>
           <div>
             <b>Se jeres lokale effekt</b>
