@@ -22,7 +22,7 @@ const EXAMPLES: [string, string, string, string][] = [
 const FAQ: [string, string][] = [
   [
     'Er gaverne fra Gaver For Dig skattefri?',
-    'Ja, når I holder jer inden for grænserne. Medarbejderen vælger én fysisk gave fra et udvalg af lokale varer, og gaven bliver leveret til jer eller til medarbejderens adresse. Der er ingen kontanter og intet gavekort, der kan bruges frit i en butik. Vælg et gavekort på højst 800 kr. ekskl. moms (1.000 kr. inkl. moms), så er julegaven skattefri, uanset hvad medarbejderen ellers har fået i årets løb.',
+    'Ja, når I holder jer inden for grænserne. Medarbejderen vælger én fysisk gave fra et udvalg af lokale varer, og gaven bliver leveret til jer eller til medarbejderens adresse. Der er ingen kontanter og intet gavekort, der kan bruges frit i en butik. Vælg en julegave til højst 800 kr. ekskl. moms (1.000 kr. inkl. moms), så er den skattefri, uanset hvad medarbejderen ellers har fået i årets løb.',
   ],
   [
     'Hvad sker der, hvis grænsen bliver overskredet?',
@@ -144,7 +144,7 @@ export default async function TaxRules() {
         </section>
 
         <section className="stack-s">
-          <h2 style={{ fontSize: 22 }}>Sådan passer vores gavekort til reglerne</h2>
+          <h2 style={{ fontSize: 22 }}>Sådan passer vores julegaver til reglerne</h2>
           <p className="muted small">Vores priser er ekskl. moms, men skattegrænserne gælder beløbet inkl. moms.</p>
           <div className="tiles">
             {cats.map((c) => {
@@ -153,7 +153,7 @@ export default async function TaxRules() {
               return (
                 <div key={c.id} className="card stack-s">
                   <div className="row between">
-                    <div className="eyebrow">Gavekort</div>
+                    <div className="eyebrow">Julegave</div>
                     <span className={`badge ${jul ? 'ok' : 'warn'}`}>{jul ? 'Skattefri julegave' : alone ? 'Kun hvis ingen andre gaver' : 'Skattepligtig'}</span>
                   </div>
                   <div style={{ fontSize: 28, fontWeight: 700 }}>{kr(c.value_kr)}</div>
@@ -188,10 +188,10 @@ export default async function TaxRules() {
         <section className="dark-card row between" style={{ gap: 20 }}>
           <div className="stack-s" style={{ flex: '1 1 420px' }}>
             <h2 style={{ fontSize: 22 }}>Klar til en skattefri, lokal julegave?</h2>
-            <p className="muted">Vælg gavekortet til 800 kr. ekskl. moms – den højeste skattefri julegave – så vælger medarbejderne selv fra butikker i Vejen Kommune.</p>
+            <p className="muted">Vælg julegaven til 800 kr. ekskl. moms – den højeste skattefri julegave – så vælger medarbejderne selv fra butikker i Vejen Kommune.</p>
           </div>
           <Link href="/bestil" className="btn light">
-            Bestil gavekort
+            Bestil julegaver
           </Link>
         </section>
 

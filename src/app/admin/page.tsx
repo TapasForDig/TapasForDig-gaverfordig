@@ -20,7 +20,7 @@ async function close(fd: FormData) {
       encodeURIComponent(
         r.orders === 0
           ? '!Ingen ordrer har udløbet vælgefrist endnu'
-          : `${r.orders} ordrer er lukket. ${r.defaults} fik standardgaven. ${r.handoffs} butikker har fået deres afleveringsliste.${r.noDefault ? ` OBS: ${r.noDefault} gavekort har hverken valg eller standardgave.` : ''}`,
+          : `${r.orders} ordrer er lukket. ${r.defaults} fik standardgaven. ${r.handoffs} butikker har fået deres afleveringsliste.${r.noDefault ? ` OBS: ${r.noDefault} medarbejdere har hverken valgt gave eller fået en standardgave.` : ''}`,
       ),
   );
 }
@@ -144,7 +144,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                   og hver butik får sin afleveringsliste på mail.
                 </p>
                 <p className="small">
-                  Klar til lukning: <b>{dueOrders.length}</b> ordrer med <b>{dueOrders.reduce((s, o) => s + (o.total - o.chosen), 0)}</b> gavekort uden valg.
+                  Klar til lukning: <b>{dueOrders.length}</b> ordrer med <b>{dueOrders.reduce((s, o) => s + (o.total - o.chosen), 0)}</b> medarbejdere uden valg.
                   {nextDeadline && (
                     <>
                       <br />

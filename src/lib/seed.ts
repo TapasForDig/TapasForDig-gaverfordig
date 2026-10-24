@@ -114,7 +114,7 @@ export async function seedIfEmpty(d: Driver) {
   const p1 = await prod(vfd.id, 'Trækasse med tre italienske vine', 'Egenimporteret rødvin, hvidvin og bobler, udvalgt til julebordet. Leveres i trækasse med gavebånd.', 'Mad og drikke', cats[800], 60, true);
   const p2 = await prod(tfd.id, 'Delikatessekurv med tapas-favoritter', 'Charcuteri, oste, oliven og pesto fra små producenter i Sydeuropa. Holdbar i mindst 3 måneder.', 'Mad og drikke', cats[800], 50);
   const p3 = await prod(inter.id, 'Lysestager i messing (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[800], 20);
-  const p4 = await prod(blom.id, 'Juledekoration med gavekort til påfyld (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[800], 25);
+  const p4 = await prod(blom.id, 'Juledekoration med lys og grønt (demo)', 'Eksempelprodukt. Butikken skriver selv 2–3 linjer om varen her.', 'Bolig', cats[800], 25);
   const p5 = await prod(wel.id, 'Gavebevis på behandling (demo)', 'Eksempelprodukt. Leveres som fysisk gavebevis med navn, gyldigt i 12 måneder.', 'Oplevelser', cats[800], 15);
   await prod(vfd.id, 'To flasker rødvin i gaveæske', 'To fyldige rødvine fra Sydeuropa i gaveæske.', 'Mad og drikke', cats[500], 80, true);
   await prod(tfd.id, 'Lille delikatessegave', 'Pesto, oliven og kiks fra vores egenimport.', 'Mad og drikke', cats[300], 80);

@@ -55,7 +55,7 @@ export default async function Home() {
           </p>
           <div className="row" style={{ marginTop: 8 }}>
             <Link href="/bestil" className="btn">
-              Bestil julegavekort
+              Bestil julegaver
             </Link>
             <Link href="/gave" className="btn outline">
               Jeg har fået en gavekode
@@ -152,7 +152,10 @@ export default async function Home() {
         )}
 
         <section id="saadan" className="stack-s">
-          <h2 style={{ fontSize: 24 }}>Sådan virker gavekortet</h2>
+          <div className="row between end">
+            <h2 style={{ fontSize: 24 }}>Sådan virker det</h2>
+            <Link href="/saadan-virker-det">Se hele forklaringen →</Link>
+          </div>
           <div className="tiles">
             {(
               [

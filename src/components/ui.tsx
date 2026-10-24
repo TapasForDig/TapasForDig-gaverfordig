@@ -10,8 +10,8 @@ export function TopBar() {
 // Header til de offentlige sider (forside, skatteregler)
 export function PublicHeader({ active }: { active?: string }) {
   const links = [
-    { href: '/bestil', label: 'Bestil gavekort' },
-    { href: '/#saadan', label: 'Sådan virker det' },
+    { href: '/bestil', label: 'Bestil julegaver' },
+    { href: '/saadan-virker-det', label: 'Sådan virker det' },
     { href: '/butikker', label: 'Butikkerne' },
     { href: '/skatteregler', label: 'Skatteregler' },
     { href: '/butik/tilmeld', label: 'For butikker' },

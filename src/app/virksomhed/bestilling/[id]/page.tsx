@@ -173,7 +173,7 @@ export default async function PurchasePage({
               Ordre {p.id} · bestilt {dato(p.created_at)}
               {u.role === "admin" ? ` · ${p.company_name}` : ""}
             </div>
-            <h1>{p.quantity} julegavekort</h1>
+            <h1>{p.quantity} julegaver</h1>
             <div className="muted" style={{ marginTop: 6 }}>
               {weekLabel(p.delivery_week)} · leveres senest{" "}
               {dato(p.delivery_date)} · vælg senest {datoTid(p.choose_deadline)}
@@ -211,7 +211,7 @@ export default async function PurchasePage({
         )}
 
         <div className="stats">
-          <Stat label="Gavekort" value={p.quantity} />
+          <Stat label="Julegaver" value={p.quantity} />
           <Stat label="Har valgt gave" value={chosen} tone="ok" />
           <Stat
             label="Mangler at vælge"
@@ -368,7 +368,7 @@ export default async function PurchasePage({
               <div key={l.id} className="card">
                 <form action={saveLine} className="form">
                   <h2>
-                    Gavekort {kr(l.value_kr)} · {l.quantity} stk.
+                    Julegaver til {kr(l.value_kr)} · {l.quantity} stk.
                   </h2>
                   <input type="hidden" name="id" value={p.id} />
                   <input type="hidden" name="order" value={l.id} />
@@ -417,7 +417,7 @@ export default async function PurchasePage({
                 <dd>{deliveryAddressText(p)}</dd>
                 <dt>Indpakning</dt>
                 <dd>{p.wrapping ? "Gaveindpakning" : "Mulepose"}</dd>
-                <dt>Gavekort</dt>
+                <dt>Julegaver</dt>
                 <dd>{kr(p.subtotal_ex)}</dd>
                 {p.delivery_fee_ex > 0 && (
                   <>

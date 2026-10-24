@@ -67,7 +67,7 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
             <p className="muted">Vælg gavebeløb – medarbejderne vælger selv blandt gaverne.</p>
             <div>
               <Link href="/bestil" className="btn light">
-                Bestil julegavekort
+                Bestil julegaver
               </Link>
             </div>
           </div>

@@ -14,7 +14,7 @@ async function own(fd: FormData): Promise<{ u: User; o: Order }> {
   const u = await requireRole('virksomhed');
   const o = await getOrder(Number(fd.get('order')));
   if (!o || (u.role !== 'admin' && o.company_id !== u.company_id)) redirect('/virksomhed');
-  // Bestillinger via gavekort (/bestil) styres fra bestillingssiden – de gamle handlinger må ikke tilføje modtagere til dem
+  // Bestillinger via /bestil styres fra bestillingssiden – de gamle handlinger må ikke tilføje modtagere til dem
   if (o.purchase_id) redirect(`/virksomhed/bestilling/${o.purchase_id}`);
   return { u, o };
 }

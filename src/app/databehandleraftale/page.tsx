@@ -9,7 +9,7 @@ export default function DataProcessing() {
     [
       'Parter',
       [
-        'Aftalen indgås mellem virksomheden, der bestiller gavekort (den dataansvarlige), og Vinfordig ApS, CVR 35854258, Merkurvej 1A, 6650 Brørup, der driver Gaver For Dig (databehandleren). Aftalen accepteres ved bestillingen og gælder, indtil alle oplysninger er slettet.',
+        'Aftalen indgås mellem virksomheden, der bestiller julegaver (den dataansvarlige), og Vinfordig ApS, CVR 35854258, Merkurvej 1A, 6650 Brørup, der driver Gaver For Dig (databehandleren). Aftalen accepteres ved bestillingen og gælder, indtil alle oplysninger er slettet.',
       ],
     ],
     [
@@ -19,7 +19,7 @@ export default function DataProcessing() {
           table: [
             ['Emne', 'Indhold'],
             ['Behandlingens art', 'Opbevaring, udsendelse af gavekoder på e-mail, registrering af gavevalg, pakning med navn og levering'],
-            ['Registrerede', 'Medarbejdere og andre, som den dataansvarlige giver et gavekort'],
+            ['Registrerede', 'Medarbejdere og andre, som den dataansvarlige giver en julegave'],
             ['Typer af oplysninger', 'Navn, e-mail, gavekode, valgt gave, hilsen og ved hjemmelevering adresse og telefon. Ingen følsomme oplysninger'],
             ['Varighed', 'Indtil gaven er leveret og derefter højst 6 måneder til reklamationer og spørgsmål'],
           ],
@@ -82,5 +82,5 @@ export default function DataProcessing() {
     ],
     ['Ansvar og ophør', ['Parternes ansvar følger databeskyttelsesforordningen og handelsbetingelserne. Ved uoverensstemmelse gælder denne aftale for behandling af personoplysninger.']],
   ];
-  return <LegalPage title="Databehandleraftale" lead="Gælder for de oplysninger om medarbejdere, som virksomheden giver Gaver For Dig, når den bestiller gavekort." sections={sections} updated={LEGAL_UPDATED} />;
+  return <LegalPage title="Databehandleraftale" lead="Gælder for de oplysninger om medarbejdere, som virksomheden giver Gaver For Dig, når den bestiller julegaver." sections={sections} updated={LEGAL_UPDATED} />;
 }

@@ -64,10 +64,10 @@ export default async function CompanyHome() {
         {purchases.length === 0 && legacy.length === 0 && (
           <div className="card stack-s">
             <h2>Ingen bestillinger endnu</h2>
-            <p className="muted">Bestil julegavekort til jeres medarbejdere – det tager få minutter.</p>
+            <p className="muted">Bestil julegaver til jeres medarbejdere – det tager få minutter.</p>
             <div>
               <Link className="btn" href="/bestil">
-                Bestil gavekort
+                Bestil julegaver
               </Link>
             </div>
           </div>
@@ -77,7 +77,7 @@ export default async function CompanyHome() {
             <Link key={p.id} href={`/virksomhed/bestilling/${p.id}`} className="card stack-s" style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="row between">
                 <h2>
-                  Ordre {p.id} · {p.quantity} gavekort
+                  Ordre {p.id} · {p.quantity} julegaver
                 </h2>
                 <Badge tone={p.status === 'delivered' ? 'ok' : p.status === 'closed' || p.status === 'packed' ? undefined : 'warn'}>
                   {p.status === 'confirmed' || p.status === 'invited' ? 'Medarbejderne vælger' : ORDER_STATUS[p.status]}

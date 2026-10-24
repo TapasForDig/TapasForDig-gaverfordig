@@ -16,7 +16,7 @@ export default async function Privacy() {
             ['Hvem', 'Oplysninger', 'Formål', 'Retsgrundlag', 'Hvor længe'],
             ['Virksomheder, der bestiller', 'Firmanavn, CVR, EAN, adresse, kontaktpersonens navn, e-mail og telefon', 'Levere ordren, sende gavekoder og fakturere', 'Aftale (art. 6, stk. 1, litra b) og bogføringsloven (litra c)', 'Ordre- og fakturadata i 5 år efter regnskabsårets udløb'],
             ['Butikker', 'Butikkens navn, CVR, adresse, kontaktperson, e-mail, telefon, logo og beskrivelse', 'Samarbejdet om gaverne, afregning og visning på siden med deltagende butikker', 'Aftale (litra b)', 'Så længe samarbejdet varer. Afregninger i 5 år'],
-            ['Medarbejdere med et gavekort', 'Navn, e-mail, gavekode, valgt gave og evt. hjemmeadresse og telefon', 'Lade dig vælge og modtage din gave', 'Vi behandler oplysningerne på din arbejdsgivers vegne', 'Slettes 6 måneder efter levering'],
+            ['Medarbejdere, der får en julegave', 'Navn, e-mail, gavekode, valgt gave og evt. hjemmeadresse og telefon', 'Lade dig vælge og modtage din gave', 'Vi behandler oplysningerne på din arbejdsgivers vegne', 'Slettes 6 måneder efter levering'],
             ['Besøgende på siden', 'Teknisk nødvendige cookies til login', 'Få siden til at virke', 'Legitim interesse (litra f)', 'Login: 30 dage. Indkøbskurven gemmes kun i din egen browser'],
           ],
         },
@@ -24,7 +24,7 @@ export default async function Privacy() {
       ],
     ],
     [
-      'Til dig, der har fået et gavekort',
+      'Til dig, der har fået en julegave',
       [
         'Din arbejdsgiver har givet os dit navn og evt. din e-mail, så du kan vælge en gave. Din arbejdsgiver er dataansvarlig for de oplysninger, og vi er databehandler. Vil du have indsigt eller rettet noget, kan du kontakte din arbejdsgiver eller os.',
         'Vælger du en gave med alkohol, bekræfter du, at du er fyldt 18 år. Vi gemmer ikke din alder.',
@@ -56,7 +56,7 @@ export default async function Privacy() {
   return (
     <LegalPage
       title="Privatlivspolitik"
-      lead="Sådan behandler Gaver For Dig oplysninger om virksomheder, butikker og medarbejdere, der får et gavekort."
+      lead="Sådan behandler Gaver For Dig oplysninger om virksomheder, butikker og medarbejdere, der får en julegave."
       sections={sections}
       updated={LEGAL_UPDATED}
     />

@@ -13,15 +13,15 @@ export default async function Terms() {
     [
       'Bestilling',
       [
-        `Gaver For Dig sælger til virksomheder og offentlige institutioner. Minimumskøb er ${s.minQty} gavekort pr. bestilling.`,
+        `Gaver For Dig sælger til virksomheder og offentlige institutioner. Minimumskøb er ${s.minQty} julegaver pr. bestilling.`,
         'Alle priser er angivet ekskl. moms. Moms på 25 % lægges til ved bestillingen.',
         'Bestillingen er bindende, når ordrebekræftelsen er sendt.',
       ],
     ],
     [
-      'Gavekort og gaver',
+      'Gaverne',
       [
-        'Et gavekort giver medarbejderen ret til at vælge én fysisk gave fra udvalget i den valgte prisgruppe. Gavekortet kan ikke byttes til kontanter.',
+        'Hver medarbejder får en personlig gavekode og vælger én fysisk gave fra udvalget i den valgte prisgruppe. Gaven kan ikke byttes til kontanter.',
         'Medarbejderen skal vælge gave senest på den frist, der står i ordrebekræftelsen. Vælger medarbejderen ikke, leveres den standardgave, virksomheden har valgt, eller en gave, vi vælger i prisgruppen.',
         'Udvalget kan ændre sig, efterhånden som butikkerne tilføjer gaver, eller varer bliver udsolgt.',
       ],

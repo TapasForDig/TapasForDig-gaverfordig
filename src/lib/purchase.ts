@@ -232,7 +232,7 @@ function linesText(codes: CodeRow[]) {
   return groups
     .map((v) => {
       const cs = codes.filter((c) => c.value_kr === v);
-      return `Gavekort ${kr(v)} – ${cs.length} stk.\n` + cs.map((c) => `  ${c.code}   ${codeLink(c.token)}`).join('\n');
+      return `Julegaver til ${kr(v)} – ${cs.length} stk.\n` + cs.map((c) => `  ${c.code}   ${codeLink(c.token)}`).join('\n');
     })
     .join('\n\n');
 }
@@ -257,7 +257,7 @@ export async function sendConfirmation(p: Purchase) {
     '',
     `Tak for jeres bestilling hos Gaver For Dig. Ordrenummer: ${p.id}`,
     '',
-    ...lines.map((l) => `Gavekort ${kr(l.value_kr)} × ${l.quantity} = ${kr(l.value_kr * l.quantity)}`),
+    ...lines.map((l) => `Julegaver til ${kr(l.value_kr)} × ${l.quantity} = ${kr(l.value_kr * l.quantity)}`),
     p.delivery_fee_ex ? `Levering til hjemmeadresser: ${kr(p.delivery_fee_ex)}` : 'Levering til virksomheden: 0 kr.',
     p.wrapping_fee_ex ? `Gaveindpakning: ${kr(p.wrapping_fee_ex)}` : 'Indpakning: leveres i mulepose',
     `Moms 25 %: ${kr(p.moms)}`,

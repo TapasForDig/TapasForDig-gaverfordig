@@ -134,7 +134,7 @@ export default async function Contact({ searchParams }: { searchParams: Promise<
                   <Link href="/gave">Jeg har fået en gavekode</Link>
                 </li>
                 <li>
-                  <Link href="/bestil">Bestil julegavekort</Link>
+                  <Link href="/bestil">Bestil julegaver</Link>
                 </li>
                 <li>
                   <Link href="/skatteregler">Skatteregler for julegaver</Link>

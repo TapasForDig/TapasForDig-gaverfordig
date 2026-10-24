@@ -64,7 +64,7 @@ export default async function Delivery() {
         <section className="tiles">
           <div className="card stack-s">
             <h2>I bestiller</h2>
-            <p className="muted small">Bestil gavekortene senest den dato, der står ud for ugen. Så har I mindst 3 dage til at dele gavekoderne ud – eller vi sender dem direkte til medarbejderne.</p>
+            <p className="muted small">Bestil julegaverne senest den dato, der står ud for ugen. Så har I mindst 3 dage til at dele gavekoderne ud – eller vi sender dem direkte til medarbejderne.</p>
           </div>
           <div className="card stack-s">
             <h2>Medarbejderne vælger</h2>
@@ -78,7 +78,7 @@ export default async function Delivery() {
 
         <div className="row">
           <Link href="/bestil" className="btn">
-            Bestil julegavekort
+            Bestil julegaver
           </Link>
           <Link href="/kontakt" className="btn outline">
             Spørgsmål? Kontakt os

@@ -107,7 +107,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           <div className="card stack-s" style={{ maxWidth: 560, margin: '40px auto' }}>
             <h1 style={{ fontSize: 28 }}>Vælg din gave</h1>
             {sp.ugyldig && <div className="alert bad">Linket er ikke gyldigt. Tjek at du har brugt hele linket fra mailen.</div>}
-            {sp.ikkeaktiv && <div className="alert">Gavekortet er ikke aktiveret endnu. Prøv igen om lidt, eller spørg den, der har givet dig koden.</div>}
+            {sp.ikkeaktiv && <div className="alert">Gavekoden er ikke aktiveret endnu. Prøv igen om lidt, eller spørg den, der har givet dig koden.</div>}
             <Notice msg={sp.m} />
             <p className="muted">Skriv den gavekode, du har fået fra din arbejdsplads. Har du fået et personligt link på mail, kan du også bare klikke på det.</p>
             <form action={redeem} className="form">

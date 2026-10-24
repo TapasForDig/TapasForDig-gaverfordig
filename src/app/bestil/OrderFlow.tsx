@@ -109,7 +109,7 @@ export default function OrderFlow({
   const val = (k: string) => state.values?.[k] ?? defaults[k] ?? '';
 
   const titles = [
-    ['Bestil årets julegavekort', 'Vælg gavebeløb og antal medarbejdere. Medarbejderne vælger selv deres gave fra lokale butikker.'],
+    ['Bestil årets julegaver', 'Vælg gavebeløb og antal medarbejdere. Medarbejderne vælger selv deres gave fra lokale butikker.'],
     ['Levering og indpakning', 'Vælg hvor gaverne skal leveres, og hvordan gavekoderne skal ud til medarbejderne.'],
     ['Hvornår skal gaverne leveres?', 'Vælg leveringsuge. Medarbejderne skal have valgt gave senest søndagen knap tre uger før.'],
     ['Du er næsten i mål', 'Udfyld firmaoplysninger, så sender vi ordrebekræftelse og gavekoder på mail.'],
@@ -166,7 +166,7 @@ export default function OrderFlow({
                 const n = qty[g.id] ?? 0;
                 const tax = incl(g.value) <= 1000;
                 return (
-                  <section key={g.id} className={`group card ${n ? 'chosen' : ''}`} aria-label={`Gavekort ${kr(g.value)}`}>
+                  <section key={g.id} className={`group card ${n ? 'chosen' : ''}`} aria-label={`Julegaver til ${kr(g.value)}`}>
                     <div className="stack-s" style={{ padding: 18 }}>
                       <div className="row between" style={{ alignItems: 'flex-start' }}>
                         <div>
@@ -197,7 +197,7 @@ export default function OrderFlow({
                           value={n || ''}
                           placeholder="Antal medarbejdere"
                           onChange={(e) => set(g.id, Number(e.target.value))}
-                          aria-label={`Antal gavekort à ${kr(g.value)}`}
+                          aria-label={`Antal julegaver til ${kr(g.value)}`}
                         />
                         <button type="button" onClick={() => set(g.id, n + 1)} aria-label="Flere">
                           +
@@ -261,7 +261,7 @@ export default function OrderFlow({
                   </Choice>
                 </div>
               </fieldset>
-              <p className="small muted">Gavekortene leveres digitalt på e-mail. Medarbejderen logger ind med sin kode og vælger én gave.</p>
+              <p className="small muted">Hver medarbejder får en personlig gavekode på e-mail og vælger selv én gave fra de lokale butikker.</p>
             </div>
           )}
 
