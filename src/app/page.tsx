@@ -79,6 +79,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             </div>
           )}
           {(heroCaption || !hero) && <figcaption>{heroCaption || 'Lokale butikker i Vejen Kommune'}</figcaption>}
+          {hero && (
+            <div className="town-flow hero-flow" aria-hidden="true">
+              <div className="town-track">
+                {[...TOWNS.slice(8), ...TOWNS.slice(0, 8), ...TOWNS.slice(8), ...TOWNS.slice(0, 8)].map((t, i) => (
+                  <span key={i}>{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
         </figure>
       </section>
 
