@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { TwoThings } from '@/components/TwoThings';
 import { PublicHeader } from '@/components/ui';
 import { categories, getSetting } from '@/lib/gifts';
 import { kr } from '@/lib/format';
@@ -80,6 +81,8 @@ export default async function Home() {
       </section>
 
       <main className="wrap stack" style={{ paddingTop: 0 }}>
+        <TwoThings />
+
         <section className="stack-s">
           <h2 style={{ fontSize: 28, textAlign: 'center', margin: '8px 0 12px' }}>Vælg den løsning, der passer jer bedst</h2>
           <div className="paths">

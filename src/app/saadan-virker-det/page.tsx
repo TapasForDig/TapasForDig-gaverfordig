@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Icon } from '@/components/Icon';
+import { TwoThings } from '@/components/TwoThings';
 import { PublicHeader } from '@/components/ui';
 import { kr } from '@/lib/format';
 import { categories } from '@/lib/gifts';
@@ -23,9 +24,13 @@ export default async function HowItWorks() {
           <div className="eyebrow">Sådan virker det</div>
           <h1 style={{ maxWidth: 760 }}>Lokale julegaver – uden besvær for jer</h1>
           <p className="muted" style={{ fontSize: 18, maxWidth: 680 }}>
-            I bestiller. Medarbejderne vælger selv en gave fra butikker i Vejen Kommune. Vi samler, pakker og leverer det hele ét sted.
+            Som gaveansvarlig bestiller du online og vælger gavebeløb. Gaver For Dig sørger for resten – fra gavekoder til levering.
           </p>
         </div>
+
+        <TwoThings />
+
+        <h2 style={{ textAlign: 'center', fontSize: 26, marginTop: 12 }}>Trin for trin</h2>
 
         {/* Overblik: fem trin på en linje */}
         <ol className="how-flow" aria-label="De fem trin">
