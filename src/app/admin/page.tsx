@@ -32,7 +32,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const season = await activeSeason();
   const sid = season?.id ?? 0;
   const [totals] = await q<{ orders: number; recipients: number; chosen: number; revenue: number; companies: number }>(
-    `select count(distinct o.id)::int as orders, count(r.id)::int as recipients, count(r.chosen_product_id)::int as chosen,
+    `select count(distinct o.id)::int as orders, count(r.id)::int as recipients, count(r.id) filter (where r.chosen_product_id is not null or r.donation_to is not null)::int as chosen,
             coalesce(sum(pc.value_kr) filter (where o.status <> 'draft'), 0)::int as revenue, count(distinct o.company_id)::int as companies
        from gift_orders o join price_categories pc on pc.id = o.price_category_id left join recipients r on r.order_id = o.id
       where o.season_id = $1`,

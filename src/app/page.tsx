@@ -3,13 +3,13 @@ import { Icon } from '@/components/Icon';
 import { LeadForm } from '@/components/LeadForm';
 import { TwoThings } from '@/components/TwoThings';
 import { BYTTEFRIST } from '@/lib/legal';
+import { TOWNS } from '@/lib/towns';
 import { PublicHeader } from '@/components/ui';
 import { categories, getSetting } from '@/lib/gifts';
 import { kr } from '@/lib/format';
 import { deliveryWeeks, incl, shopSettings } from '@/lib/purchase';
 import { publicShops } from '@/lib/shops';
 
-const TOWNS = ['Brørup', 'Vejen', 'Rødding', 'Holsted', 'Askov', 'Lintrup', 'Gesten', 'Jels', 'Skodborg', 'Bække', 'Hovborg', 'Føvling', 'Lindknud', 'Glejbjerg', 'Andst', 'Malt'];
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ lead?: string }> }) {
   const sp = await searchParams;

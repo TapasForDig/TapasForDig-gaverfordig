@@ -99,7 +99,7 @@ async function choose(fd: FormData) {
   // Opdatér kun, hvis der stadig er flere på lager (undgår oversalg, når to vælger samtidig)
   const done = await q<{ id: number }>(
     `update recipients set chosen_product_id = $1, chosen_at = now(), is_default = false, age_confirmed = age_confirmed or $2,
-            variant_id = $5::int, variant_label = $6::text
+            variant_id = $5::int, variant_label = $6::text, donation_to = null, donation_town = null
       where id = $3
         and ($1 = $4::int or (select coalesce(stock, 2147483647) from products where id = $1) >
             (select count(*) from recipients where chosen_product_id = $1 and id <> $3))
@@ -121,7 +121,36 @@ async function choose(fd: FormData) {
   redirect('/gave?m=' + encodeURIComponent(`Du har valgt ${pname}. Du får en bekræftelse på mail.`));
 }
 
-export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string; ikkeaktiv?: string; ret?: string }> }) {
+// Medarbejderen giver gavens værdi til en lokal forening, som hun/han selv skriver navnet på
+async function donate(fd: FormData) {
+  'use server';
+  const r = await currentRecipient();
+  if (!r) redirect('/gave');
+  const o = await getOrder(r.order_id);
+  const deadline = o ? await deadlineFor(o) : null;
+  if (!o || !OPEN.includes(o.status) || (deadline && deadline < new Date())) redirect('/gave?m=' + encodeURIComponent('!Vælgeperioden er slut'));
+  if ((await getSetting('donation_aktiv')).trim().toLowerCase() !== 'ja') redirect('/gave');
+  const name = str(fd, 'forening').replace(/\s+/g, ' ').slice(0, 120);
+  const town = str(fd, 'by').replace(/\s+/g, ' ').slice(0, 60) || null;
+  if (name.length < 2) redirect('/gave?m=' + encodeURIComponent('!Skriv navnet på foreningen') + '#donation');
+  if (!r.name) redirect('/gave?ret=1&m=' + encodeURIComponent('!Udfyld dit navn først'));
+  await q(
+    `update recipients set chosen_product_id = null, variant_id = null, variant_label = null, is_default = false,
+            donation_to = $1, donation_town = $2, chosen_at = now() where id = $3`,
+    [name, town, r.id],
+  );
+  await logEvent(`modtager:${r.id}`, 'recipient', r.id, 'gave doneret', `${name}${town ? `, ${town}` : ''}`);
+  if (r.email) {
+    await sendMail(
+      r.email,
+      'Tak – din gave går til en lokal forening',
+      `Hej ${r.name}\n\nTak! Du har valgt at give værdien af din julegave fra ${o.company_name} til ${name}${town ? ` i ${town}` : ''}.\n\nVi kontakter foreningen og overfører beløbet efter jul.\n\nDu kan ændre dit valg frem til ${datoTid(deadline)} med din gavekode ${r.code ?? ''}.\n\nVenlig hilsen\nGaver For Dig`,
+    );
+  }
+  redirect('/gave?m=' + encodeURIComponent(`Tak! Din gave går til ${name}.`));
+}
+
+export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string; ikkeaktiv?: string; ret?: string; alk?: string }> }) {
   const sp = await searchParams;
   const r = await currentRecipient();
   if (!r) {
@@ -170,7 +199,17 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
   const [phone, mail] = await Promise.all([getSetting('kontakt_telefon'), getSetting('kontakt_email')]);
   const contact = { phone: phone || '71 99 75 74', email: mail || 'info@gaverfordig.dk' };
   const kind = sp.k && (KINDS as readonly string[]).includes(sp.k) ? sp.k : 'Alle';
-  const shown = kind === 'Alle' ? all : all.filter((p) => p.kind === kind);
+  const noAlcohol = sp.alk === 'nej';
+  const shown = (kind === 'Alle' ? all : all.filter((p) => p.kind === kind)).filter((p) => !noAlcohol || !p.alcohol);
+  const hasAlcohol = all.some((p) => p.alcohol);
+  const donationOn = (await getSetting('donation_aktiv')).trim().toLowerCase() === 'ja';
+  const qs = (k: string, alk: boolean) => {
+    const u = new URLSearchParams();
+    if (k !== 'Alle') u.set('k', k);
+    if (alk) u.set('alk', 'nej');
+    const s = u.toString();
+    return s ? `/gave?${s}` : '/gave';
+  };
   const kindsInUse = KINDS.filter((k) => all.some((p) => p.kind === k));
   const chosen = r.chosen_product_id ? await getProduct(r.chosen_product_id) : undefined;
   const variants = await variantsFor(all.filter((p) => p.variant_options).map((p) => p.id));
@@ -262,6 +301,17 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           </p>
         )}
 
+        {r.donation_to && !needInfo && (
+          <div className="dark-card row between">
+            <div>
+              <div className="small muted">Dit valg</div>
+              <div style={{ fontSize: 20, fontWeight: 700 }}>Din gave går til {r.donation_to}</div>
+              <div className="small muted">{r.donation_town ? `${r.donation_town} · ` : ''}Vi overfører beløbet til foreningen efter jul.</div>
+            </div>
+            {open && <span className="small muted">Vælg en gave nedenfor, hvis du skifter mening.</span>}
+          </div>
+        )}
+
         {chosen && !needInfo && (
           <div className="dark-card row between">
             <div>
@@ -280,10 +330,15 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           <>
             <nav className="pills" aria-label="Filtrér gaver">
               {['Alle', ...kindsInUse].map((k) => (
-                <Link key={k} href={k === 'Alle' ? '/gave' : `/gave?k=${encodeURIComponent(k)}`} className={`pill ${k === kind ? 'on' : ''}`}>
+                <Link key={k} href={qs(k, noAlcohol)} className={`pill ${k === kind ? 'on' : ''}`}>
                   {k}
                 </Link>
               ))}
+              {hasAlcohol && (
+                <Link href={qs(kind, !noAlcohol)} className={`pill ${noAlcohol ? 'on' : ''}`} style={{ marginLeft: 'auto' }}>
+                  {noAlcohol ? '✓ ' : ''}Uden alkohol
+                </Link>
+              )}
             </nav>
             {shown.length === 0 && <p className="muted">Der er ingen gaver i denne kategori lige nu.</p>}
             <div className="products">
@@ -343,9 +398,33 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
                 );
               })}
             </div>
+            {donationOn && (
+              <section id="donation" className={`card donate ${r.donation_to ? 'selected' : ''}`}>
+                <div className="stack-s" style={{ flex: '1 1 320px' }}>
+                  <div className="eyebrow">Eller giv gaven videre</div>
+                  <h2>Giv gaven til en lokal forening</h2>
+                  <p className="muted" style={{ margin: 0 }}>
+                    Har du det, du skal bruge? Så kan du give gavens værdi til en forening i Vejen Kommune – fx din sportsklub, spejderne eller skolens forældreforening. Skriv selv, hvilken forening det skal være.
+                  </p>
+                </div>
+                <form action={donate} className="form" style={{ flex: '1 1 320px' }}>
+                  <div className="field">
+                    <label htmlFor="forening">Foreningens navn *</label>
+                    <input id="forening" name="forening" type="text" required minLength={2} maxLength={120} defaultValue={r.donation_to ?? ''} placeholder="Fx Brørup Boldklub" />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="by">By</label>
+                    <input id="by" name="by" type="text" maxLength={60} defaultValue={r.donation_town ?? ''} placeholder="Fx Brørup" />
+                  </div>
+                  <button className={`btn ${r.donation_to ? '' : 'outline'}`} type="submit">
+                    {r.donation_to ? 'Opdatér forening' : 'Giv min gave til foreningen'}
+                  </button>
+                </form>
+              </section>
+            )}
           </>
         ) : (
-          !chosen && <div className="alert warn">Vælgeperioden er slut. Kontakt den, der står for gaverne hos jer.</div>
+          !chosen && !r.donation_to && <div className="alert warn">Vælgeperioden er slut. Kontakt den, der står for gaverne hos jer.</div>
         )}
       </main>
     </>

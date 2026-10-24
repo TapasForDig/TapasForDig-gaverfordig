@@ -21,7 +21,7 @@ export async function runAutoReminders(): Promise<number> {
        from recipients r join gift_orders o on o.id = r.order_id join purchases p on p.id = o.purchase_id
       where p.auto_remind and not p.hold and p.choose_deadline > now()
         and o.status in ('confirmed','invited')
-        and r.email is not null and r.chosen_product_id is null and r.anonymized_at is null
+        and r.email is not null and r.chosen_product_id is null and r.donation_to is null and r.anonymized_at is null
         and r.invited_at is not null and r.invited_at < now() - interval '2 days'
         and coalesce(r.reminded_at, 'epoch'::timestamptz) < now() - interval '2 days'
         and ((r.auto_reminders = 0 and p.choose_deadline < now() + interval '7 days')
@@ -42,4 +42,40 @@ export async function runAutoReminders(): Promise<number> {
   }
   for (const [pid, n] of perPurchase) await logEvent('system', 'purchase', pid, 'automatisk påmindelse', `${n} stk.`);
   return rows.length;
+}
+
+// Dagen efter levering: send virksomheden effektrapporten (én gang pr. bestilling)
+export async function runImpactMails(): Promise<number> {
+  const { appUrl, kr } = await import('./format');
+  const { purchaseImpact, genitiv } = await import('./impact');
+  const due = await q<{ id: number; company_name: string; contact_first: string; contact_email: string }>(
+    `select p.id, p.company_name, p.contact_first, p.contact_email from purchases p
+      where p.impact_mailed_at is null and not p.hold and p.delivery_date < current_date
+        and exists (select 1 from recipients r join gift_orders o on o.id = r.order_id
+                     where o.purchase_id = p.id and (r.chosen_product_id is not null or r.donation_to is not null))
+      order by p.id limit 200`,
+  );
+  for (const p of due) {
+    const i = await purchaseImpact(p.id);
+    await sendMail(
+      p.contact_email,
+      `${genitiv(p.company_name)} julegaver holdt ${kr(i.value)} i Vejen Kommune`,
+      [
+        `Hej ${p.contact_first}`,
+        '',
+        `Tak fordi I gav lokale julegaver i år. Jeres ${i.gifts} julegaver kom fra ${i.shops.length} lokale ${i.shops.length === 1 ? 'butik' : 'butikker'} – i alt ${kr(i.value)}, der blev i Vejen Kommune${i.clubs.length ? `, heraf ${kr(i.clubValue)} til lokale foreninger` : ''}.`,
+        '',
+        'Vi har lavet en lille rapport, som I kan dele med medarbejderne, på intranettet eller på LinkedIn:',
+        `${appUrl()}/virksomhed/bestilling/${p.id}/effekt`,
+        '',
+        'Glædelig jul fra os og alle butikkerne.',
+        '',
+        'Venlig hilsen',
+        'Gaver For Dig',
+      ].join('\n'),
+    );
+    await q('update purchases set impact_mailed_at = now() where id = $1', [p.id]);
+    await logEvent('system', 'purchase', p.id, 'effektrapport sendt');
+  }
+  return due.length;
 }

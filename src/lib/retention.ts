@@ -1,5 +1,5 @@
 import { logEvent, one, q } from './db';
-import { runAutoReminders } from './reminders';
+import { runAutoReminders, runImpactMails } from './reminders';
 
 // Sletteregler (se privatlivspolitikken og databehandleraftalen)
 export const RECIPIENT_MONTHS = 6; // medarbejderoplysninger: 6 måneder efter levering
@@ -39,5 +39,6 @@ export async function cleanupIfDue() {
   if (last && Date.now() - new Date(last.value).getTime() < 24 * 3600 * 1000) return null;
   const r = await runCleanup();
   await runAutoReminders();
+  await runImpactMails();
   return r;
 }

@@ -14,7 +14,16 @@ export interface ImpactShop {
   value: number;
 }
 
+export interface ImpactClub {
+  name: string;
+  town: string | null;
+  gifts: number;
+  value: number;
+}
+
 export interface Impact {
+  clubs: ImpactClub[];
+  clubValue: number;
   shops: ImpactShop[];
   gifts: number;
   value: number;
@@ -32,12 +41,21 @@ export async function purchaseImpact(purchaseId: number): Promise<Impact> {
       group by s.id, s.name, s.town, s.logo order by value desc, s.name`,
     [purchaseId],
   );
+  const clubs = await q<ImpactClub>(
+    `select min(r.donation_to) as name, min(r.donation_town) as town, count(*)::int as gifts, sum(pc.value_kr)::int as value
+       from recipients r join gift_orders o on o.id = r.order_id join price_categories pc on pc.id = o.price_category_id
+      where o.purchase_id = $1 and r.donation_to is not null
+      group by lower(regexp_replace(trim(r.donation_to), '\\s+', ' ', 'g')) order by value desc`,
+    [purchaseId],
+  );
   const total = (await q<{ n: number }>(`select count(*)::int as n from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = $1`, [purchaseId]))[0]?.n ?? 0;
   const towns = [...new Set(shops.map((s) => s.town?.trim()).filter((t): t is string => !!t))].sort((a, b) => a.localeCompare(b, 'da'));
   return {
+    clubs,
+    clubValue: clubs.reduce((a, c) => a + c.value, 0),
     shops,
-    gifts: shops.reduce((a, s) => a + s.gifts, 0),
-    value: shops.reduce((a, s) => a + s.value, 0),
+    gifts: shops.reduce((a, s) => a + s.gifts, 0) + clubs.reduce((a, c) => a + c.gifts, 0),
+    value: shops.reduce((a, s) => a + s.value, 0) + clubs.reduce((a, c) => a + c.value, 0),
     towns,
     total,
   };

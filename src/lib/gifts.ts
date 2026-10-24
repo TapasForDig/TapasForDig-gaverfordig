@@ -153,9 +153,9 @@ export interface OrderStats {
 export async function orderStats(orderId: number): Promise<OrderStats> {
   const s = await one<OrderStats>(
     `select count(*)::int as total,
-            count(chosen_product_id)::int as chosen,
-            count(*) filter (where opened_at is not null and chosen_product_id is null)::int as opened,
-            count(*) filter (where opened_at is null and chosen_product_id is null)::int as not_opened,
+            count(*) filter (where chosen_product_id is not null or donation_to is not null)::int as chosen,
+            count(*) filter (where opened_at is not null and chosen_product_id is null and donation_to is null)::int as opened,
+            count(*) filter (where opened_at is null and chosen_product_id is null and donation_to is null)::int as not_opened,
             count(received_at)::int as received
        from recipients where order_id = $1`,
     [orderId],
@@ -203,7 +203,7 @@ export async function sendReminders(orderId: number) {
   if (!o) return 0;
   const season = await one<Season>('select * from seasons where id = $1', [o.season_id]);
   const rows = await q<{ id: number; name: string; email: string; token: string }>(
-    `select id, name, email, token from recipients where order_id = $1 and invited_at is not null and chosen_product_id is null`,
+    `select id, name, email, token from recipients where order_id = $1 and invited_at is not null and chosen_product_id is null and donation_to is null`,
     [orderId],
   );
   for (const r of rows) {
@@ -237,11 +237,11 @@ export async function closeChoosing(seasonId: number, actor: string, force = fal
   const defaults = await q<{ id: number }>(
     `update recipients r set chosen_product_id = o.default_product_id, chosen_at = now(), is_default = true
        from gift_orders o
-      where r.order_id = o.id and o.id = any($1::int[]) and r.chosen_product_id is null and o.default_product_id is not null
+      where r.order_id = o.id and o.id = any($1::int[]) and r.chosen_product_id is null and r.donation_to is null and o.default_product_id is not null
       returning r.id`,
     [ids],
   );
-  const noDefault = (await one<{ n: number }>('select count(*)::int as n from recipients where order_id = any($1::int[]) and chosen_product_id is null', [ids]))!.n;
+  const noDefault = (await one<{ n: number }>('select count(*)::int as n from recipients where order_id = any($1::int[]) and chosen_product_id is null and donation_to is null', [ids]))!.n;
   await q(`update gift_orders set status = 'closed' where id = any($1::int[])`, [ids]);
 
   const dropDays = Number(await getSetting('aflevering_dage_foer')) || 5;

@@ -32,6 +32,8 @@ export interface Recipient {
   variant_label: string | null;
   chosen_at: Date | null;
   is_default: boolean;
+  donation_to: string | null;
+  donation_town: string | null;
 }
 
 const USER_COOKIE = 'gfd_s';

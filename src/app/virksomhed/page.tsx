@@ -34,7 +34,7 @@ export default async function CompanyHome() {
   const company = companyId ? await one<{ name: string }>('select name from companies where id = $1', [companyId]) : undefined;
   const purchases = await q<PRow>(
     `select p.id, p.company_name, p.delivery_week, p.delivery_date, p.choose_deadline, p.quantity, p.total_inc, p.delivery_mode, p.created_at,
-            (select count(r.chosen_product_id)::int from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = p.id) as chosen,
+            (select (count(*) filter (where r.chosen_product_id is not null or r.donation_to is not null))::int from recipients r join gift_orders o on o.id = r.order_id where o.purchase_id = p.id) as chosen,
             (select case min(case o.status when 'closed' then 2 when 'packed' then 3 when 'delivered' then 4 else 1 end)
                       when 2 then 'closed' when 3 then 'packed' when 4 then 'delivered' else 'confirmed' end
                from gift_orders o where o.purchase_id = p.id) as status

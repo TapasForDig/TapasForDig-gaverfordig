@@ -267,6 +267,10 @@ alter table companies add column if not exists logo text;
 alter table purchases add column if not exists auto_remind boolean not null default true;
 alter table purchases add column if not exists share_token text unique;
 alter table recipients add column if not exists auto_reminders integer not null default 0;
+alter table recipients add column if not exists donation_to text;
+alter table recipients add column if not exists donation_town text;
+alter table recipients add column if not exists donation_paid_at timestamptz;
+alter table purchases add column if not exists impact_mailed_at timestamptz;
 
 create index if not exists recipients_order_idx on recipients(order_id);
 create index if not exists gift_orders_purchase_idx on gift_orders(purchase_id);

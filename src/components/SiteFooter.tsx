@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { TOWNS, townSlug } from '@/lib/towns';
 
 export function SiteFooter() {
   return (
@@ -14,6 +15,14 @@ export function SiteFooter() {
           <Link href="/butikker">Butikkerne</Link>
         </nav>
       </div>
+      <nav className="footer-towns" aria-label="Firmajulegaver i byerne">
+        <span>Firmajulegaver i</span>
+        {TOWNS.map((t) => (
+          <Link key={t} href={`/firmajulegaver/${townSlug(t)}`}>
+            {t}
+          </Link>
+        ))}
+      </nav>
     </footer>
   );
 }

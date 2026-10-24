@@ -58,7 +58,7 @@ async function remind(fd: FormData) {
     greeting: string | null;
   }>(
     `select r.id, r.name, r.email, r.code, r.token, o.greeting from recipients r join gift_orders o on o.id = r.order_id
-      where o.purchase_id = $1 and r.email is not null and r.chosen_product_id is null`,
+      where o.purchase_id = $1 and r.email is not null and r.chosen_product_id is null and r.donation_to is null`,
     [p.id],
   );
   for (const r of rows) {

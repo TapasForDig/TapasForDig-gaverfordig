@@ -569,3 +569,11 @@ table.mini { width: 100%; border-collapse: collapse; font-size: 14px; }
 .usp-strip span { font-size: 15px; color: var(--muted); line-height: 1.45; }
 @media (max-width: 860px) { .usp-strip { grid-template-columns: 1fr; } }
 .label-swap { margin-top: 8px; padding-top: 6px; border-top: 1px dotted #999; font-size: 11px; line-height: 1.3; }
+
+/* Donation til lokal forening */
+.donate { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; border: 1px dashed var(--green-light, #9fb3a2); background: #fbfaf6; }
+.donate.selected { border: 2px solid var(--green); }
+.donate h2 { font-size: 22px; }
+.footer-towns { max-width: 1180px; margin: 0 auto; padding: 0 24px 22px; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; opacity: .8; }
+.footer-towns a { color: inherit; }
+.footer-towns span { font-weight: 600; }
