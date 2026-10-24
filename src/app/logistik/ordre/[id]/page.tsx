@@ -50,7 +50,7 @@ export default async function PackOrder({ params, searchParams }: { params: Prom
   const pay = o?.purchase_id ? (await q<{ hold: boolean; paid_at: Date | null }>('select hold, paid_at from purchases where id = $1', [o.purchase_id]))[0] : null;
   if (!o) notFound();
   const items = await q<Item>(
-    `select r.id, r.name, r.code, r.address, r.zip, r.city, r.department, p.name as product, s.name as shop, r.received_at
+    `select r.id, r.name, r.code, r.address, r.zip, r.city, r.department, p.name || coalesce(' – ' || r.variant_label, '') as product, s.name as shop, r.received_at
        from recipients r join products p on p.id = r.chosen_product_id join shops s on s.id = p.shop_id
       where r.order_id = $1 order by r.department nulls last, r.name`,
     [o.id],

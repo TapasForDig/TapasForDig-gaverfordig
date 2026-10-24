@@ -215,7 +215,7 @@ export interface CodeRow {
 export async function purchaseCodes(purchaseId: number): Promise<CodeRow[]> {
   return q<CodeRow>(
     `select r.id, r.order_id, r.code, r.token, r.name, r.email, pc.value_kr, r.invited_at, r.opened_at, r.chosen_at, r.is_default,
-            p.name as product_name, s.name as shop_name
+            p.name || coalesce(' – ' || r.variant_label, '') as product_name, s.name as shop_name
        from recipients r join gift_orders o on o.id = r.order_id join price_categories pc on pc.id = o.price_category_id
        left join products p on p.id = r.chosen_product_id left join shops s on s.id = p.shop_id
       where o.purchase_id = $1 order by pc.value_kr, r.id`,

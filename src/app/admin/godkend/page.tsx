@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { sendMail } from '@/lib/mail';
 import { adminNav } from '../nav';
 import { FoodInfo } from '@/components/FoodInfo';
+import { variantsFor } from '@/lib/variants';
 
 async function decideShop(fd: FormData) {
   'use server';
@@ -61,6 +62,7 @@ export default async function Approve({ searchParams }: { searchParams: Promise<
     `select * from shops where status = 'pending' order by created_at`,
   );
   const [products, drafts, cats] = await Promise.all([productsByStatus('pending'), productsByStatus('draft'), categories()]);
+  const vmap = await variantsFor([...products, ...drafts].filter((p) => p.variant_options).map((p) => p.id));
   const missing = (p: Product) =>
     [
       images(p.images).length === 0 && 'billede',
@@ -91,6 +93,15 @@ export default async function Approve({ searchParams }: { searchParams: Promise<
             {p.kind || 'ingen kategori'} · {cat ? `${kr(cat.value_kr)} ekskl. moms` : 'ingen prisgruppe'} · normalpris {kr(p.normal_price_kr)} · antal {p.stock}
             {p.alcohol ? ' · alkohol' : ''} · {imgs.length} billeder
           </div>
+          {p.variant_options && (
+            <div className="small muted">
+              Varianter:{' '}
+              {(vmap.get(p.id) ?? [])
+                .filter((v) => v.stock > 0)
+                .map((v) => `${v.label} (${v.stock})`)
+                .join(', ') || 'ingen på lager'}
+            </div>
+          )}
           <div className="field">
             <label htmlFor={`cost-${p.id}`} className="small">
               Indkøbspris til butikken (kr., valgfri)

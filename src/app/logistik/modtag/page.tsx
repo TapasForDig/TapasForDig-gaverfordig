@@ -60,10 +60,10 @@ export default async function Receive({ searchParams }: { searchParams: Promise<
   const sel = sp.h ? handoffs.find((h) => h.id === Number(sp.h)) : undefined;
   const items = sel
     ? await q<Item>(
-        `select r.id, p.name as product, c.name as company, coalesce(r.name, 'Kode ' || r.code) as recipient, r.received_at, r.missing
+        `select r.id, p.name || coalesce(' – ' || r.variant_label, '') as product, c.name as company, coalesce(r.name, 'Kode ' || r.code) as recipient, r.received_at, r.missing
            from recipients r join products p on p.id = r.chosen_product_id
            join gift_orders o on o.id = r.order_id join companies c on c.id = o.company_id
-          where r.handoff_id = $1 order by p.name, c.name, r.name`,
+          where r.handoff_id = $1 order by p.name, r.variant_label, c.name, r.name`,
         [sel.id],
       )
     : [];

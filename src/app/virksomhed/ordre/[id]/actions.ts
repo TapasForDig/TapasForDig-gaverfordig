@@ -96,7 +96,7 @@ export async function saveDetails(fd: FormData) {
   if (!EDITABLE.includes(o.status)) back(o.id, '!Ordren kan ikke længere ændres');
   const def = Number(fd.get('default_product')) || null;
   if (def) {
-    const ok = (await giftsFor(o.price_category_id, def)).some((p) => p.id === def);
+    const ok = (await giftsFor(o.price_category_id, def)).some((p) => p.id === def && !p.variant_options);
     if (!ok) back(o.id, '!Standardgaven findes ikke i jeres priskategori');
   }
   await q('update gift_orders set greeting = $1, default_product_id = $2 where id = $3', [str(fd, 'greeting'), def, o.id]);

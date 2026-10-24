@@ -10,6 +10,7 @@ import { getOrder, getProduct, getSetting, giftsFor, type Season } from '@/lib/g
 import { FoodInfo } from '@/components/FoodInfo';
 import { sendMail } from '@/lib/mail';
 import { clientIp, tooMany } from '@/lib/ratelimit';
+import { variantsFor } from '@/lib/variants';
 
 const OPEN = ['confirmed', 'invited'];
 
@@ -59,6 +60,16 @@ async function saveInfo(fd: FormData) {
   redirect('/gave');
 }
 
+// "størrelse", "farve" eller "størrelse og farve" ud fra produktets egenskaber
+function variantWord(json: string | null): string {
+  try {
+    const o = JSON.parse(json || '[]') as { name: string }[];
+    return o.map((x) => x.name.toLowerCase()).join(' og ') || 'variant';
+  } catch {
+    return 'variant';
+  }
+}
+
 async function choose(fd: FormData) {
   'use server';
   const r = await currentRecipient();
@@ -76,24 +87,37 @@ async function choose(fd: FormData) {
   if (p.alcohol && !r.age_confirmed && fd.get('age') !== 'ja') {
     redirect('/gave?m=' + encodeURIComponent('!Bekræft at du er fyldt 18 år for at vælge en gave med alkohol'));
   }
+  // Varianter: medarbejderen skal vælge fx størrelse/farve, og netop den variant skal være på lager
+  let variant: { id: number; label: string } | null = null;
+  if (p.variant_options) {
+    const vs = (await variantsFor([p.id])).get(p.id) ?? [];
+    const v = vs.find((x) => x.id === Number(fd.get('variant')));
+    if (!v) redirect('/gave?m=' + encodeURIComponent(`!Vælg ${variantWord(p.variant_options)} for ${p.name}`));
+    variant = { id: v.id, label: v.label };
+  }
   // Opdatér kun, hvis der stadig er flere på lager (undgår oversalg, når to vælger samtidig)
   const done = await q<{ id: number }>(
-    `update recipients set chosen_product_id = $1, chosen_at = now(), is_default = false, age_confirmed = age_confirmed or $2
-      where id = $3 and ($1 = $4::int or (select coalesce(stock, 2147483647) from products where id = $1) >
+    `update recipients set chosen_product_id = $1, chosen_at = now(), is_default = false, age_confirmed = age_confirmed or $2,
+            variant_id = $5::int, variant_label = $6::text
+      where id = $3
+        and ($1 = $4::int or (select coalesce(stock, 2147483647) from products where id = $1) >
             (select count(*) from recipients where chosen_product_id = $1 and id <> $3))
+        and ($5::int is null or (select stock from product_variants where id = $5::int) >
+            (select count(*) from recipients where variant_id = $5::int and id <> $3))
       returning id`,
-    [p.id, fd.get('age') === 'ja', r.id, r.chosen_product_id ?? 0],
+    [p.id, fd.get('age') === 'ja', r.id, r.chosen_product_id ?? 0, variant?.id ?? null, variant?.label ?? null],
   );
   if (!done.length) redirect('/gave?m=' + encodeURIComponent('!Gaven blev desværre valgt af andre lige før dig. Vælg en anden.'));
-  await logEvent(`modtager:${r.id}`, 'recipient', r.id, 'gave valgt', `${p.name} (${p.shop_name})`);
+  const pname = variant ? `${p.name} (${variant.label})` : p.name;
+  await logEvent(`modtager:${r.id}`, 'recipient', r.id, 'gave valgt', `${pname} – ${p.shop_name}`);
   if (r.email) {
     await sendMail(
       r.email,
       'Din gave er valgt',
-      `Hej ${r.name}\n\nTak! Du har valgt: ${p.name} fra ${p.shop_name}.\n${o.delivery_mode === 'home' ? `Gaven sendes til ${r.address}, ${r.zip} ${r.city}.` : 'Gaven pakkes med dit navn og leveres til din arbejdsplads.'}\n\nDu kan ændre dit valg frem til ${datoTid(deadline)} med din gavekode ${r.code ?? ''}.\n\nVenlig hilsen\nGaver For Dig`,
+      `Hej ${r.name}\n\nTak! Du har valgt: ${pname} fra ${p.shop_name}.\n${o.delivery_mode === 'home' ? `Gaven sendes til ${r.address}, ${r.zip} ${r.city}.` : 'Gaven pakkes med dit navn og leveres til din arbejdsplads.'}\n\nDu kan ændre dit valg frem til ${datoTid(deadline)} med din gavekode ${r.code ?? ''}.\n\nVenlig hilsen\nGaver For Dig`,
     );
   }
-  redirect('/gave?m=' + encodeURIComponent(`Du har valgt ${p.name}. Du får en bekræftelse på mail.`));
+  redirect('/gave?m=' + encodeURIComponent(`Du har valgt ${pname}. Du får en bekræftelse på mail.`));
 }
 
 export default async function GiftShop({ searchParams }: { searchParams: Promise<{ k?: string; m?: string; ugyldig?: string; ikkeaktiv?: string; ret?: string }> }) {
@@ -148,6 +172,7 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
   const shown = kind === 'Alle' ? all : all.filter((p) => p.kind === kind);
   const kindsInUse = KINDS.filter((k) => all.some((p) => p.kind === k));
   const chosen = r.chosen_product_id ? await getProduct(r.chosen_product_id) : undefined;
+  const variants = await variantsFor(all.filter((p) => p.variant_options).map((p) => p.id));
   const firstName = r.name?.split(' ')[0] ?? '';
 
   return (
@@ -239,7 +264,10 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
           <div className="dark-card row between">
             <div>
               <div className="small muted">{r.is_default ? 'Du fik tildelt standardgaven' : 'Dit valg'}</div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>{chosen.name}</div>
+              <div style={{ fontSize: 20, fontWeight: 700 }}>
+                {chosen.name}
+                {r.variant_label ? ` – ${r.variant_label}` : ''}
+              </div>
               <div className="small muted">fra {chosen.shop_name}</div>
             </div>
             {open && <span className="small muted">Vælg en anden gave nedenfor, hvis du skifter mening.</span>}
@@ -259,6 +287,10 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
             <div className="products">
               {shown.map((p) => {
                 const sel = p.id === r.chosen_product_id;
+                // Varianter der stadig kan vælges (eller den, medarbejderen allerede har)
+                const avail = (variants.get(p.id) ?? []).filter((v) => v.stock > v.chosen || v.id === r.variant_id);
+                const hasVariants = !!p.variant_options;
+                if (hasVariants && !avail.length && !sel) return null;
                 return (
                   <article key={p.id} className={`product ${sel ? 'selected' : ''}`}>
                     <ProductImage json={p.images} alt={p.name} label={sel ? <Badge tone="wine">Dit valg</Badge> : undefined} />
@@ -270,20 +302,37 @@ export default async function GiftShop({ searchParams }: { searchParams: Promise
                       <h3>{p.name}</h3>
                       <p className="desc">{p.description}</p>
                       {p.kind === 'Mad og drikke' && <FoodInfo ingredients={p.ingredients} netContent={p.net_content} contact={contact} compact />}
-                      {sel ? (
+                      {sel && !hasVariants ? (
                         <span className="btn block" aria-disabled="true">
                           Valgt
                         </span>
                       ) : (
                         <form action={choose} className="stack-s">
                           <input type="hidden" name="product" value={p.id} />
+                          {hasVariants && (
+                            <div className="field">
+                              <label htmlFor={`variant-${p.id}`} className="small">
+                                Vælg {variantWord(p.variant_options)}
+                              </label>
+                              <select id={`variant-${p.id}`} name="variant" required defaultValue={sel && r.variant_id ? String(r.variant_id) : ''}>
+                                <option value="" disabled>
+                                  Vælg …
+                                </option>
+                                {avail.map((v) => (
+                                  <option key={v.id} value={v.id}>
+                                    {v.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                           {p.alcohol && !r.age_confirmed && (
                             <label className="check small" style={{ justifyContent: 'center' }}>
                               <input type="checkbox" name="age" value="ja" required /> Jeg er fyldt 18 år
                             </label>
                           )}
-                          <button className="btn outline block" type="submit">
-                            Vælg denne gave
+                          <button className={`btn block ${sel ? '' : 'outline'}`} type="submit">
+                            {sel ? 'Valgt – skift variant' : 'Vælg denne gave'}
                           </button>
                         </form>
                       )}

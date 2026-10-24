@@ -27,6 +27,8 @@ interface Props {
     images: string[];
     wrap_ok: boolean;
     shelf_ok: boolean;
+    variant_options: string | null;
+    variants: { label: string; stock: number; chosen: number }[];
   };
 }
 
@@ -37,6 +39,16 @@ interface Item {
 }
 
 const MAX_SIDE = 1600;
+const SIZES = 'XS, S, M, L, XL, XXL';
+
+interface Opt {
+  name: string;
+  values: string; // kommasepareret, som butikken skriver det
+}
+const splitVals = (s: string) => [...new Set(s.split(',').map((v) => v.replace(/\//g, '-').trim()).filter(Boolean))].slice(0, 15);
+const cleanOpts = (opts: Opt[]) => opts.map((o) => ({ name: o.name.trim(), values: splitVals(o.values) })).filter((o) => o.name && o.values.length);
+const comboLabels = (opts: { values: string[] }[]) =>
+  opts.reduce<string[]>((acc, o) => (acc.length ? acc.flatMap((a) => o.values.map((v) => `${a} / ${v}`)) : [...o.values]), []);
 const incl = (v: number) => Math.round(v * 1.25);
 const kr = (n: number) => `${n.toLocaleString('da-DK')} kr.`;
 
@@ -67,6 +79,35 @@ export default function ProductForm(props: Props) {
   const [price, setPrice] = useState(p?.normal_price_kr ? String(p.normal_price_kr) : '');
   const [ingredients, setIngredients] = useState(p?.ingredients ?? '');
   const [netContent, setNetContent] = useState(p?.net_content ?? '');
+  // Varianter (fx størrelse og farve)
+  const initialOpts: Opt[] = (() => {
+    try {
+      const o = JSON.parse(p?.variant_options || '[]') as { name: string; values: string[] }[];
+      return o.map((x) => ({ name: x.name, values: x.values.join(', ') }));
+    } catch {
+      return [];
+    }
+  })();
+  const [useVariants, setUseVariants] = useState(initialOpts.length > 0);
+  const [opts, setOpts] = useState<Opt[]>(initialOpts.length ? initialOpts : [{ name: 'Størrelse', values: SIZES }]);
+  const [stocks, setStocks] = useState<Record<string, string>>(Object.fromEntries((p?.variants ?? []).map((v) => [v.label, String(v.stock)])));
+  const chosenBy = Object.fromEntries((p?.variants ?? []).map((v) => [v.label, v.chosen]));
+  const clean = cleanOpts(opts);
+  const labels = comboLabels(clean);
+  const variantTotal = labels.reduce((s, l) => s + (Number(stocks[l]) || 0), 0);
+  const setOpt = (i: number, patch: Partial<Opt>) => setOpts((a) => a.map((o, j) => (j === i ? { ...o, ...patch } : o)));
+  const stockInput = (label: string) => (
+    <input
+      type="number"
+      min={0}
+      inputMode="numeric"
+      aria-label={`Antal ${label}`}
+      value={stocks[label] ?? ''}
+      placeholder="0"
+      onChange={(e) => setStocks((s) => ({ ...s, [label]: e.target.value }))}
+      className="variant-stock"
+    />
+  );
   const food = kind === 'Mad og drikke';
   const [items, setItems] = useState<Item[]>((p?.images ?? []).map((src) => ({ src })));
   const [busy, setBusy] = useState('');
@@ -128,6 +169,7 @@ export default function ProductForm(props: Props) {
     [desc.trim().length >= 120, `Beskrivelse på mindst 120 tegn (${desc.trim().length})`],
     [!!kind, 'Kategori'],
     [!!chosen && !priceWarn && priceNum > 0, 'Prisgruppe og udsalgspris'],
+    ...(useVariants ? ([[variantTotal > 0, 'Antal på varianterne']] as const) : []),
   ] as const;
 
   return (
@@ -137,6 +179,8 @@ export default function ProductForm(props: Props) {
         <input type="hidden" name="butik" value={props.butik} />
         <input type="hidden" name="order" value={JSON.stringify(order)} />
         <input ref={fileField} type="file" name="images" multiple hidden tabIndex={-1} aria-hidden="true" />
+        <input type="hidden" name="use_variants" value={useVariants ? 'ja' : ''} />
+        <input type="hidden" name="variants_json" value={JSON.stringify({ options: clean, stock: Object.fromEntries(labels.map((l) => [l, Number(stocks[l]) || 0])) })} />
 
         <section className="section" style={{ borderTop: 0, paddingTop: 0 }}>
           <h2>1 · Billeder</h2>
@@ -275,11 +319,101 @@ export default function ProductForm(props: Props) {
 
         <section className="section">
           <h2>4 · Antal og levering</h2>
-          <div className="field">
-            <label htmlFor="stock">Hvor mange kan du levere i sæsonen?</label>
-            <input id="stock" name="stock" type="number" min={0} inputMode="numeric" defaultValue={p?.stock ?? ''} style={{ maxWidth: 220 }} />
-            <span className="hint">Gaven skjules automatisk for medarbejderne, når antallet er valgt.</span>
-          </div>
+          <label className="check">
+            <input type="checkbox" checked={useVariants} onChange={(e) => setUseVariants(e.target.checked)} />
+            <span>
+              <b>Gaven findes i flere varianter</b> – fx størrelse eller farve. Medarbejderen vælger selv, og du angiver antal for hver variant.
+            </span>
+          </label>
+
+          {!useVariants ? (
+            <div className="field">
+              <label htmlFor="stock">Hvor mange kan du levere i sæsonen?</label>
+              <input id="stock" name="stock" type="number" min={0} inputMode="numeric" defaultValue={p?.stock ?? ''} style={{ maxWidth: 220 }} />
+              <span className="hint">Gaven skjules automatisk for medarbejderne, når antallet er valgt.</span>
+            </div>
+          ) : (
+            <div className="variants card stack-s">
+              <input type="hidden" name="stock" value={variantTotal} />
+              {opts.map((o, i) => (
+                <div key={i} className="variant-opt">
+                  <div className="field" style={{ flex: '0 0 170px' }}>
+                    <label htmlFor={`opt-name-${i}`}>Egenskab {i + 1}</label>
+                    <input id={`opt-name-${i}`} type="text" maxLength={30} value={o.name} onChange={(e) => setOpt(i, { name: e.target.value })} placeholder={i === 0 ? 'Fx Størrelse' : 'Fx Farve'} />
+                  </div>
+                  <div className="field" style={{ flex: '1 1 260px' }}>
+                    <label htmlFor={`opt-vals-${i}`}>Muligheder (adskil med komma)</label>
+                    <input id={`opt-vals-${i}`} type="text" value={o.values} onChange={(e) => setOpt(i, { values: e.target.value })} placeholder={i === 0 ? SIZES : 'Fx Sort, Navy, Grå'} />
+                    <span className="hint">
+                      {o.name.toLowerCase().startsWith('st') && o.values !== SIZES && (
+                        <button type="button" className="linkbtn small" onClick={() => setOpt(i, { values: SIZES })}>
+                          Brug XS–XXL
+                        </button>
+                      )}
+                    </span>
+                  </div>
+                  {opts.length > 1 && (
+                    <button type="button" className="linkbtn small" style={{ color: 'var(--bad)', alignSelf: 'center' }} onClick={() => setOpts((a) => a.filter((_, j) => j !== i))}>
+                      Fjern
+                    </button>
+                  )}
+                </div>
+              ))}
+              {opts.length < 2 && (
+                <button type="button" className="btn outline small" style={{ alignSelf: 'flex-start' }} onClick={() => setOpts((a) => [...a, { name: a.some((x) => x.name === 'Farve') ? '' : 'Farve', values: '' }])}>
+                  + Tilføj egenskab (fx farve)
+                </button>
+              )}
+
+              {labels.length > 0 && (
+                <div className="stack-s" style={{ marginTop: 6 }}>
+                  <b className="small">Antal du kan levere af hver variant</b>
+                  {clean.length === 2 ? (
+                    <div className="table-wrap">
+                      <table className="variant-matrix">
+                        <thead>
+                          <tr>
+                            <th>
+                              {clean[0].name} \ {clean[1].name}
+                            </th>
+                            {clean[1].values.map((v) => (
+                              <th key={v}>{v}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {clean[0].values.map((a) => (
+                            <tr key={a}>
+                              <th>{a}</th>
+                              {clean[1].values.map((b) => (
+                                <td key={b}>
+                                  {stockInput(`${a} / ${b}`)}
+                                  {chosenBy[`${a} / ${b}`] ? <span className="hint">{chosenBy[`${a} / ${b}`]} valgt</span> : null}
+                                </td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="variant-list">
+                      {labels.map((l) => (
+                        <label key={l} className="variant-cell">
+                          <span>{l}</span>
+                          {stockInput(l)}
+                          {chosenBy[l] ? <span className="hint">{chosenBy[l]} valgt</span> : null}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <span className="hint">
+                    I alt <b>{variantTotal}</b> stk. Skriv 0 ved varianter, du ikke har – de vises ikke for medarbejderne.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
           <label className="check">
             <input type="checkbox" name="alcohol" value="ja" defaultChecked={p?.alcohol} />
             <span>Varen indeholder alkohol (vises kun for medarbejdere, der bekræfter at være fyldt 18 år)</span>

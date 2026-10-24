@@ -28,6 +28,8 @@ export interface Recipient {
   opened_at: Date | null;
   age_confirmed: boolean;
   chosen_product_id: number | null;
+  variant_id: number | null;
+  variant_label: string | null;
   chosen_at: Date | null;
   is_default: boolean;
 }

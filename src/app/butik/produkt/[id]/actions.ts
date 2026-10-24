@@ -6,6 +6,7 @@ import { appUrl, images, int, kr, KINDS, str } from '@/lib/format';
 import { categories, getProduct } from '@/lib/gifts';
 import { sendMail } from '@/lib/mail';
 import { saveImage } from '@/lib/storage';
+import { cleanOptions, combos } from '@/lib/variants';
 import { myShop } from '../../shop';
 
 export async function saveProduct(fd: FormData) {
@@ -44,7 +45,20 @@ export async function saveProduct(fd: FormData) {
   const kind = str(fd, 'kind');
   const catId = int(fd, 'category');
   const normal = int(fd, 'normal_price');
-  const stock = Math.max(0, int(fd, 'stock') ?? 0);
+  // Varianter (fx størrelse/farve): lager pr. kombination, samlet lager = summen
+  const useVariants = fd.get('use_variants') === 'ja';
+  let options: ReturnType<typeof cleanOptions> = [];
+  let variantStock: Record<string, number> = {};
+  if (useVariants) {
+    try {
+      const v = JSON.parse(str(fd, 'variants_json') || '{}');
+      options = cleanOptions(Array.isArray(v.options) ? v.options : []);
+      variantStock = v.stock && typeof v.stock === 'object' ? v.stock : {};
+    } catch {}
+  }
+  const labels = combos(options);
+  const variantRows = labels.map((label, i) => ({ label, sort: i, stock: Math.max(0, Math.min(100000, Math.floor(Number(variantStock[label]) || 0))) }));
+  const stock = useVariants && labels.length ? variantRows.reduce((s, r) => s + r.stock, 0) : Math.max(0, int(fd, 'stock') ?? 0);
   const alcohol = fd.get('alcohol') === 'ja';
   const food = kind === 'Mad og drikke';
   const ingredients = food ? str(fd, 'ingredients').slice(0, 2000) || null : null;
@@ -63,7 +77,8 @@ export async function saveProduct(fd: FormData) {
     if (!(KINDS as readonly string[]).includes(kind)) problems.push('en kategori');
     if (!cat) problems.push('en prisgruppe');
     if (cat && (normal == null || normal < Math.round(cat.value_kr * 1.25))) problems.push(`en normal udsalgspris på mindst ${kr(Math.round(cat.value_kr * 1.25))} inkl. moms`);
-    if (stock < 1) problems.push('et antal på mindst 1');
+    if (useVariants && !labels.length) problems.push('mindst én variant (fx størrelser)');
+    if (stock < 1) problems.push(useVariants ? 'antal på mindst én variant' : 'et antal på mindst 1');
     if (!wrapOk) problems.push('bekræftelse af gaveemballage');
     if (food && !shelfOk) problems.push('bekræftelse af holdbarhed');
     if (problems.length) {
@@ -87,6 +102,33 @@ export async function saveProduct(fd: FormData) {
   );
 
   async function persist(): Promise<number> {
+    const pid = await persistProduct();
+    await syncVariants(pid);
+    return pid;
+  }
+
+  async function syncVariants(pid: number) {
+    const opts = useVariants && labels.length ? JSON.stringify(options) : null;
+    await q('update products set variant_options = $1 where id = $2', [opts, pid]);
+    const keep = opts ? variantRows : [];
+    for (const v of keep) {
+      await q(
+        `insert into product_variants (product_id, label, stock, sort) values ($1,$2,$3,$4)
+         on conflict (product_id, label) do update set stock = excluded.stock, sort = excluded.sort`,
+        [pid, v.label, v.stock, v.sort],
+      );
+    }
+    // Fjernede varianter: slet dem, medmindre en medarbejder allerede har valgt dem (så sættes lageret til 0)
+    const labelsKept = keep.map((v) => v.label);
+    await q(
+      `delete from product_variants v where v.product_id = $1 and not (v.label = any($2::text[]))
+         and not exists (select 1 from recipients r where r.variant_id = v.id)`,
+      [pid, labelsKept],
+    );
+    await q(`update product_variants set stock = 0 where product_id = $1 and not (label = any($2::text[]))`, [pid, labelsKept]);
+  }
+
+  async function persistProduct(): Promise<number> {
     if (isNew) {
       const r = await one<{ id: number }>(
         `insert into products (shop_id, name, description, kind, price_category_id, normal_price_kr, stock, alcohol, images, status, ingredients, net_content, wrap_ok, shelf_ok)
@@ -131,6 +173,8 @@ export async function productAction(fd: FormData) {
        returning id`,
       [p!.id],
     );
+    await q('update products set variant_options = (select variant_options from products where id = $1) where id = $2', [p!.id, r!.id]);
+    await q(`insert into product_variants (product_id, label, stock, sort) select $2, label, stock, sort from product_variants where product_id = $1`, [p!.id, r!.id]);
     redirect(`/butik/produkt/${r!.id}?butik=${shop.id}&m=${encodeURIComponent('Kopien er oprettet som kladde – ret den til og send den til godkendelse')}`);
   }
   if (what === 'delete') {

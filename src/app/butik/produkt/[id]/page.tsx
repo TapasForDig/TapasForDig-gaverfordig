@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { Badge, Notice, Shell } from '@/components/ui';
 import { images, KINDS } from '@/lib/format';
 import { categories, getProduct, getSetting, PRODUCT_STATUS } from '@/lib/gifts';
+import { variantsFor } from '@/lib/variants';
 import { shopNav } from '../../nav';
 import { myShop } from '../../shop';
 import { saveProduct } from './actions';
@@ -15,6 +16,7 @@ export default async function ProductGuide({ params, searchParams }: { params: P
   if (id !== 'ny' && (!p || p.shop_id !== shop.id)) notFound();
   const [cats, phone, mail] = await Promise.all([categories(), getSetting('kontakt_telefon'), getSetting('kontakt_email')]);
   const q0 = shops ? `?butik=${shop.id}` : '';
+  const variants = p ? ((await variantsFor([p.id])).get(p.id) ?? []) : [];
 
   return (
     <Shell area={`Butik · ${shop.name}`} nav={shopNav.map((n) => ({ ...n, href: n.href + q0 }))}>
@@ -54,6 +56,8 @@ export default async function ProductGuide({ params, searchParams }: { params: P
                   images: images(p.images),
                   wrap_ok: p.wrap_ok || p.status !== 'draft',
                   shelf_ok: p.shelf_ok || p.status !== 'draft',
+                  variant_options: p.variant_options,
+                  variants: variants.map((v) => ({ label: v.label, stock: v.stock, chosen: v.chosen })),
                 }
               : undefined
           }

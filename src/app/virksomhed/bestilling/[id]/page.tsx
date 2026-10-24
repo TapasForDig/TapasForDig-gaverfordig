@@ -112,7 +112,7 @@ async function saveLine(fd: FormData) {
     // Standardgaven skal være en godkendt gave i ordrelinjens egen prisgruppe
     const line = await one<{ price_category_id: number }>("select price_category_id from gift_orders where id = $1 and purchase_id = $2", [orderId, p.id]);
     const allowed = line ? await giftsFor(line.price_category_id, null) : [];
-    if (!allowed.some((x) => x.id === def)) back(p.id, "!Standardgaven skal være en af gaverne i prisgruppen");
+    if (!allowed.some((x) => x.id === def && !x.variant_options)) back(p.id, "!Standardgaven skal være en af gaverne i prisgruppen (uden størrelser eller farver)");
   }
   await q(
     `update gift_orders set greeting = $1, default_product_id = $2 where id = $3 and purchase_id = $4 and status in ('confirmed','invited')`,
@@ -147,7 +147,8 @@ export default async function PurchasePage({
     [p.id],
   );
   const giftLists = await Promise.all(
-    lines.map((l) => giftsFor(l.price_category_id, l.default_product_id)),
+    // Gaver med varianter (fx størrelse) kan ikke være standardgave – vi ved ikke, hvilken størrelse folk skal have
+    lines.map(async (l) => (await giftsFor(l.price_category_id, l.default_product_id)).filter((g) => !g.variant_options)),
   );
   const chosen = codes.filter((c) => c.product_name).length;
   const sentTo = codes.filter((c) => c.email).length;

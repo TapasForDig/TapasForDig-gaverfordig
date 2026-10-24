@@ -34,12 +34,12 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     orderStats(o.id),
     q<R>(
       `select r.id, r.name, r.email, r.department, r.token, r.invited_at, r.opened_at, r.chosen_at, r.is_default,
-              p.name as product_name, s.name as shop_name
+              p.name || coalesce(' – ' || r.variant_label, '') as product_name, s.name as shop_name
          from recipients r left join products p on p.id = r.chosen_product_id left join shops s on s.id = p.shop_id
         where r.order_id = $1 order by r.name`,
       [o.id],
     ),
-    giftsFor(o.price_category_id, o.default_product_id),
+    giftsFor(o.price_category_id, o.default_product_id).then((g) => g.filter((x) => !x.variant_options)),
     getSetting('gebyr_pr_modtager_kr'),
   ]);
   const editable = ['draft', 'confirmed', 'invited'].includes(o.status);

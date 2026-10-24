@@ -44,19 +44,19 @@ export default async function ShopHome({ searchParams }: { searchParams: Promise
     [shop.id],
   );
   const lines = await q<Line>(
-    `select r.handoff_id, p.name as product, count(*)::int as n, string_agg(distinct c.name, ', ') as companies,
+    `select r.handoff_id, p.name || coalesce(' – ' || r.variant_label, '') as product, count(*)::int as n, string_agg(distinct c.name, ', ') as companies,
             count(r.received_at)::int as received, count(*) filter (where o.wrapping)::int as wrap
        from recipients r join products p on p.id = r.chosen_product_id
        join gift_orders o on o.id = r.order_id join companies c on c.id = o.company_id
       where p.shop_id = $1 and r.handoff_id is not null
-      group by r.handoff_id, p.name order by p.name`,
+      group by r.handoff_id, p.name, r.variant_label order by p.name, r.variant_label`,
     [shop.id],
   );
   const pending = await q<{ product: string; n: number }>(
-    `select p.name as product, count(*)::int as n
+    `select p.name || coalesce(' – ' || r.variant_label, '') as product, count(*)::int as n
        from recipients r join products p on p.id = r.chosen_product_id join gift_orders o on o.id = r.order_id
       where p.shop_id = $1 and r.handoff_id is null and o.status in ('confirmed','invited')
-      group by p.name order by n desc`,
+      group by p.name, r.variant_label order by n desc`,
     [shop.id],
   );
   const open = handoffs.filter((h) => !h.received_at);

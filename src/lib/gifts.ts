@@ -23,6 +23,7 @@ export interface Product {
   net_content: string | null;
   wrap_ok: boolean;
   shelf_ok: boolean;
+  variant_options: string | null;
   chosen: number;
 }
 

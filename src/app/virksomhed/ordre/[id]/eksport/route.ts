@@ -17,7 +17,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     return new Response('Ingen adgang', { status: 403 });
   }
   const rows = await q<Record<string, unknown>>(
-    `select r.name, r.email, r.department, p.name as gave, s.name as butik, r.is_default, r.chosen_at
+    `select r.name, r.email, r.department, p.name || coalesce(' – ' || r.variant_label, '') as gave, s.name as butik, r.is_default, r.chosen_at
        from recipients r left join products p on p.id = r.chosen_product_id left join shops s on s.id = p.shop_id
       where r.order_id = $1 order by r.department, r.name`,
     [o.id],

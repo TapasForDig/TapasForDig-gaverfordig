@@ -15,10 +15,10 @@ export default async function HandoffSheet({ params, searchParams }: { params: P
   if (!h) notFound();
   const [season, dropAddr] = await Promise.all([activeSeason(), getSetting('logistik_adresse')]);
   const lines = await q<{ product: string; company: string; n: number; wrap: number }>(
-    `select p.name as product, c.name as company, count(*)::int as n, count(*) filter (where o.wrapping)::int as wrap
+    `select p.name || coalesce(' – ' || r.variant_label, '') as product, c.name as company, count(*)::int as n, count(*) filter (where o.wrapping)::int as wrap
        from recipients r join products p on p.id = r.chosen_product_id
        join gift_orders o on o.id = r.order_id join companies c on c.id = o.company_id
-      where r.handoff_id = $1 group by p.name, c.name order by p.name, c.name`,
+      where r.handoff_id = $1 group by p.name, r.variant_label, c.name order by p.name, r.variant_label, c.name`,
     [h.id],
   );
   const total = lines.reduce((s, l) => s + l.n, 0);

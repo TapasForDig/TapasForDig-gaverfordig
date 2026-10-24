@@ -205,6 +205,17 @@ create table if not exists purchases (
   created_at timestamptz not null default now()
 );
 
+alter table products add column if not exists variant_options text;
+create table if not exists product_variants (
+  id serial primary key,
+  product_id integer not null references products(id) on delete cascade,
+  label text not null,
+  stock integer not null default 0,
+  sort integer not null default 0,
+  unique (product_id, label)
+);
+alter table recipients add column if not exists variant_id integer references product_variants(id) on delete set null;
+alter table recipients add column if not exists variant_label text;
 create table if not exists rate_hits (key text not null, at timestamptz not null default now());
 create index if not exists rate_hits_key_at on rate_hits (key, at);
 alter table purchases add column if not exists submit_key text unique;

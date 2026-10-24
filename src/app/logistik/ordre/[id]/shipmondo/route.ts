@@ -17,7 +17,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const o = await getOrder(Number(id));
   if (!o) return new Response('Ikke fundet', { status: 404 });
   const rows = await q<Record<string, string | null>>(
-    `select r.code, r.name, r.address, r.zip, r.city, r.phone, r.email, p.name as product
+    `select r.code, r.name, r.address, r.zip, r.city, r.phone, r.email, p.name || coalesce(' – ' || r.variant_label, '') as product
        from recipients r join products p on p.id = r.chosen_product_id
       where r.order_id = $1 order by r.name`,
     [o.id],
