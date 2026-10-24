@@ -9,6 +9,7 @@ import { placeOrder } from './actions';
 import OrderFlow, { type GroupView } from './OrderFlow';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/bestil' },
   title: 'Bestil julegaver – Gaver For Dig',
   description: 'Vælg gavebeløb, antal medarbejdere og leveringsuge. Medarbejderne vælger selv deres gave fra lokale butikker.',
 };

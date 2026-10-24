@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   const i = await purchaseImpact(p.id);
   const title = `${genitiv(p.company_name)} julegaver holdt ${kr(i.value)} i Vejen Kommune`;
   const description = `${i.gifts} julegaver fra ${i.shops.length} lokale butikker – via Gaver For Dig.`;
-  return { title, description, openGraph: { title, description, siteName: 'Gaver For Dig' }, robots: { index: false } };
+  return { title, description, openGraph: { title, description, siteName: 'Gaver For Dig', locale: 'da_DK', images: [{ url: '/og.png', width: 1200, height: 630 }] }, robots: { index: false } };
 }
 
 export default async function PublicImpact({ params }: { params: Promise<{ token: string }> }) {

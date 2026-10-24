@@ -4,7 +4,11 @@ import { PublicHeader } from '@/components/ui';
 import { publicShops } from '@/lib/shops';
 import { LeadForm } from '@/components/LeadForm';
 
-export const metadata: Metadata = { title: 'Deltagende butikker – Gaver For Dig' };
+export const metadata: Metadata = {
+  title: 'Deltagende butikker – Gaver For Dig',
+  description: 'Se de lokale butikker i Vejen Kommune, som jeres medarbejdere kan vælge julegaver fra – i Brørup, Vejen, Rødding, Holsted og resten af kommunen.',
+  alternates: { canonical: '/butikker' },
+};
 
 export default async function Shops({ searchParams }: { searchParams: Promise<{ by?: string; lead?: string }> }) {
   const sp = await searchParams;
@@ -43,7 +47,7 @@ export default async function Shops({ searchParams }: { searchParams: Promise<{ 
           <div className="shop-grid">
             {list.map((s) => (
               <article key={s.id} className="shop-card">
-                <div className="logo-box">{s.logo ? <img src={s.logo} alt={s.name} /> : <span className="initials">{s.name}</span>}</div>
+                <div className="logo-box">{s.logo ? <img src={s.logo} alt={s.name} loading="lazy" decoding="async" /> : <span className="initials">{s.name}</span>}</div>
                 <div className="body">
                   <h3>{s.name}</h3>
                   {s.town && <span className="small muted">{s.town}</span>}

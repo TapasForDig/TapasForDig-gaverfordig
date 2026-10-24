@@ -7,6 +7,7 @@ export function SiteFooter() {
       <div className="footer-inner">
         <span>Gaver For Dig · Vinfordig ApS · CVR 35854258 · Merkurvej 1A, 6650 Brørup</span>
         <nav aria-label="Om siden">
+          <Link href="/gaver">Gaverne</Link>
           <Link href="/kontakt">Kontakt</Link>
           <Link href="/handelsbetingelser">Handelsbetingelser</Link>
           <Link href="/privatliv">Privatlivspolitik</Link>

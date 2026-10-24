@@ -8,7 +8,11 @@ import { contact } from '@/lib/legal';
 import { sendMail } from '@/lib/mail';
 import { clientIp, tooMany } from '@/lib/ratelimit';
 
-export const metadata: Metadata = { title: 'Kontakt – Gaver For Dig' };
+export const metadata: Metadata = {
+  title: 'Kontakt – Gaver For Dig',
+  description: 'Kontakt Gaver For Dig om lokale firmajulegaver i Vejen Kommune. Skriv eller ring – vi hjælper med gavebeløb, antal og levering.',
+  alternates: { canonical: '/kontakt' },
+};
 
 const TOPICS = ['Vi er en virksomhed og vil bestille gaver', 'Jeg har en butik og vil være med', 'Jeg har fået en gavekode', 'Andet'];
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

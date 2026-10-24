@@ -1,4 +1,7 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { organization, service, website } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
 import { Icon } from '@/components/Icon';
 import { LeadForm } from '@/components/LeadForm';
 import { TwoThings } from '@/components/TwoThings';
@@ -10,6 +13,8 @@ import { kr } from '@/lib/format';
 import { deliveryWeeks, incl, shopSettings } from '@/lib/purchase';
 import { publicShops } from '@/lib/shops';
 
+
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ lead?: string }> }) {
   const sp = await searchParams;
@@ -68,7 +73,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </div>
         <figure className="hero-img">
           {hero ? (
-            <img src={hero} alt={heroCaption || 'Vejen Kommune'} />
+            <img src={hero} alt={heroCaption || 'Julestemning i Vejen Kommune'} fetchPriority="high" />
           ) : (
             <div className="hero-fallback">
               <span className="eyebrow">Gaver fra</span>
@@ -92,6 +97,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         </figure>
       </section>
 
+      <JsonLd data={[organization(), website(), service()]} />
       <main className="wrap stack" style={{ paddingTop: 0 }}>
         <TwoThings />
         <section className="usp-strip" aria-label="Det får I kun her">
@@ -114,7 +120,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <div className="paths">
             <div className="path">
               <div className="visual" style={{ background: 'var(--green)' }}>
-                {img1 ? <img src={img1} alt="" /> : <Icon name="gift" size={72} />}
+                {img1 ? <img src={img1} alt="" loading="lazy" decoding="async" /> : <Icon name="gift" size={72} />}
               </div>
               <h3>Giv medarbejderne frit valg</h3>
               <p>Vælg gavebeløb – vi sender gavekoder, og hver medarbejder vælger sin gave fra lokale butikker. Vi klarer resten.</p>
@@ -126,7 +132,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             </div>
             <div className="path">
               <div className="visual" style={{ background: 'var(--wine)' }}>
-                {img2 ? <img src={img2} alt="" /> : <Icon name="bag" size={72} />}
+                {img2 ? <img src={img2} alt="" loading="lazy" decoding="async" /> : <Icon name="bag" size={72} />}
               </div>
               <h3>I vælger selv i webshoppen</h3>
               <p>Gå på opdagelse i butikkernes udvalg og vælg selv gaverne til jeres medarbejdere.</p>
@@ -136,7 +142,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
             </div>
             <div className="path">
               <div className="visual" style={{ background: 'var(--green-dark)' }}>
-                {img3 ? <img src={img3} alt="" /> : <Icon name="calendar" size={72} />}
+                {img3 ? <img src={img3} alt="" loading="lazy" decoding="async" /> : <Icon name="calendar" size={72} />}
               </div>
               <h3>Gaveæsker &amp; julekalendere</h3>
               <p>Lokale lækkerier samlet i gaveæsker og julekalendere – klar til at give videre.</p>
@@ -149,7 +155,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
 
         {band && (
           <section className="band">
-            <img src={band} alt="" />
+            <img src={band} alt="" loading="lazy" decoding="async" />
             <div className="band-text">
               <h2>{bandTitle || 'Gaver med lokal sjæl'}</h2>
               <p>{bandText || 'Hver gave kommer fra en butik i Vejen Kommune. Når I giver en gave herfra, bliver pengene i lokalsamfundet.'}</p>
@@ -168,12 +174,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
           <section className="stack-s">
             <div className="row between end">
               <h2 style={{ fontSize: 24 }}>Butikkerne bag gaverne</h2>
-              <Link href="/butikker">Se alle {shops.length} butikker →</Link>
+              <span className="row" style={{ gap: 16 }}>
+                <Link href="/gaver">Se gaverne →</Link>
+                <Link href="/butikker">Se alle {shops.length} butikker →</Link>
+              </span>
             </div>
             <div className="logo-strip">
               {shops.slice(0, 12).map((x) => (
                 <Link key={x.id} href="/butikker" title={x.name}>
-                  {x.logo ? <img src={x.logo} alt={x.name} /> : x.name}
+                  {x.logo ? <img src={x.logo} alt={x.name} loading="lazy" decoding="async" /> : x.name}
                 </Link>
               ))}
             </div>

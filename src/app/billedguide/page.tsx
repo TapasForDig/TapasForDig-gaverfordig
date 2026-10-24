@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicHeader } from '@/components/ui';
 
-export const metadata: Metadata = { title: 'Billedguide til butikker – Gaver For Dig' };
+export const metadata: Metadata = { title: 'Billedguide til butikker – Gaver For Dig', robots: { index: false, follow: true } };
 
 // Enkel tegning af en gave i et kvadratisk billede. variant styrer god/dårlig.
 function Shot({ variant }: { variant: 'good' | 'dark' | 'cut' | 'text' | 'small' | 'collage' }) {

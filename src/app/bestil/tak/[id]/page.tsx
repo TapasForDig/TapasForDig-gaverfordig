@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PublicHeader } from '@/components/ui';
 import { Icon } from '@/components/Icon';
@@ -5,6 +6,9 @@ import { currentUser } from '@/lib/auth';
 import { dato, datoTid, kr } from '@/lib/format';
 import { deliveryAddressText, getPurchase, weekLabel } from '@/lib/purchase';
 import { ClearCart } from './ClearCart';
+
+export const metadata: Metadata = { title: 'Tak for bestillingen – Gaver For Dig', robots: { index: false, follow: false } };
+
 
 export default async function Thanks({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ login?: string }> }) {
   const { id } = await params;

@@ -3,7 +3,11 @@ import Link from 'next/link';
 import { Badge, PublicHeader } from '@/components/ui';
 import { deliveryWeeks, shopSettings } from '@/lib/purchase';
 
-export const metadata: Metadata = { title: 'Levering og deadlines – Gaver For Dig' };
+export const metadata: Metadata = {
+  title: 'Levering og deadlines – Gaver For Dig',
+  description: 'Levering af firmajulegaver hver uge frem til jul. Se hvornår I senest skal bestille, og hvornår medarbejderne skal have valgt deres gave.',
+  alternates: { canonical: '/levering' },
+};
 
 const fmt = (d: Date | string) => new Date(d).toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Europe/Copenhagen' });
 

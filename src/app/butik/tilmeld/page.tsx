@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { BYTTEFRIST } from '@/lib/legal';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
@@ -6,6 +7,13 @@ import { hashPassword, startSession } from '@/lib/auth';
 import { logEvent, one, q } from '@/lib/db';
 import { appUrl, str } from '@/lib/format';
 import { sendMail } from '@/lib/mail';
+
+export const metadata: Metadata = {
+  title: 'Tilmeld din butik – sælg firmajulegaver | Gaver For Dig',
+  description: 'Har du en butik i Vejen Kommune? Tilmeld dig gratis, opret dine gaver, og sælg julegaver til lokale virksomheder – vi står for kundeservice, pakning og levering.',
+  alternates: { canonical: '/butik/tilmeld' },
+};
+
 
 async function signup(fd: FormData) {
   'use server';

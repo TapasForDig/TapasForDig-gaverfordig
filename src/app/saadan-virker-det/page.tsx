@@ -9,6 +9,7 @@ import { incl, shopSettings } from '@/lib/purchase';
 import { LeadForm } from '@/components/LeadForm';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/saadan-virker-det' },
   title: 'Sådan virker det – Gaver For Dig',
   description: 'Sådan fungerer lokale firmajulegaver: I bestiller, medarbejderne vælger selv en gave fra lokale butikker, og vi pakker og leverer samlet.',
 };

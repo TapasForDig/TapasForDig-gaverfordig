@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { breadcrumbs, faq } from '@/lib/seo';
+import { JsonLd } from '@/components/JsonLd';
 import Link from 'next/link';
 import { PublicHeader } from '@/components/ui';
 import { kr } from '@/lib/format';
@@ -6,6 +8,7 @@ import { categories } from '@/lib/gifts';
 import { incl } from '@/lib/purchase';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/skatteregler' },
   title: 'Skatteregler for firmagaver 2026 – Gaver For Dig',
   description: 'Hvor meget må en skattefri julegave koste i 2026? Overblik over beløbsgrænser, gavekort, jubilæum og moms for firmagaver til medarbejdere.',
 };
@@ -55,6 +58,7 @@ export default async function TaxRules() {
   return (
     <>
       <PublicHeader active="/skatteregler" />
+      <JsonLd data={[faq(FAQ), breadcrumbs([['Forside', '/'], ['Skatteregler', '/skatteregler']])]} />
 
       <section className="hero" style={{ paddingBottom: 24 }}>
         <div className="stack-s" style={{ flex: '1 1 600px' }}>

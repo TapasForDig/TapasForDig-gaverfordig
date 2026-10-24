@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BYTTEFRIST } from '@/lib/legal';
 import { redirect } from 'next/navigation';
@@ -12,6 +13,9 @@ import { FoodInfo } from '@/components/FoodInfo';
 import { sendMail } from '@/lib/mail';
 import { clientIp, tooMany } from '@/lib/ratelimit';
 import { variantsFor } from '@/lib/variants';
+
+export const metadata: Metadata = { title: 'Vælg din gave – Gaver For Dig', robots: { index: false, follow: false } };
+
 
 const OPEN = ['confirmed', 'invited'];
 

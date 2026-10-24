@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { Notice, Shell } from '@/components/ui';
@@ -5,6 +6,9 @@ import { checkPassword, currentUser, hashPassword, homeFor, startSession, type R
 import { logEvent, one, q } from '@/lib/db';
 import { str } from '@/lib/format';
 import { clientIp, tooMany } from '@/lib/ratelimit';
+
+export const metadata: Metadata = { title: 'Log ind – Gaver For Dig', robots: { index: false, follow: false } };
+
 
 async function login(fd: FormData) {
   'use server';

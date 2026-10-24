@@ -1,11 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { JsonLd } from '@/components/JsonLd';
 import { LeadForm } from '@/components/LeadForm';
 import { TwoThings } from '@/components/TwoThings';
 import { PublicHeader } from '@/components/ui';
 import { BYTTEFRIST } from '@/lib/legal';
 import { publicShops } from '@/lib/shops';
+import { breadcrumbs, service } from '@/lib/seo';
 import { TOWNS, townFromSlug, townSlug } from '@/lib/towns';
 
 export function generateStaticParams() {
@@ -17,7 +19,15 @@ export async function generateMetadata({ params }: { params: Promise<{ by: strin
   if (!town) return {};
   const title = `Firmajulegaver i ${town} – lokale julegaver til medarbejderne | Gaver For Dig`;
   const description = `Giv jeres medarbejdere i ${town} en julegave fra lokale butikker i Vejen Kommune. Medarbejderne vælger selv – vi pakker og leverer samlet. Skattefri inden for reglerne.`;
-  return { title, description, alternates: { canonical: `/firmajulegaver/${townSlug(town)}` }, openGraph: { title, description, siteName: 'Gaver For Dig' } };
+  // Byer uden egne butikker indekseres ikke endnu (så siderne ikke ligner tynde kopier af hinanden)
+  const hasShops = (await publicShops()).some((s) => s.town?.trim().toLowerCase() === town.toLowerCase());
+  return {
+    title,
+    description,
+    alternates: { canonical: `/firmajulegaver/${townSlug(town)}` },
+    openGraph: { title, description, siteName: 'Gaver For Dig', locale: 'da_DK', images: [{ url: '/og.png', width: 1200, height: 630 }] },
+    robots: hasShops ? undefined : { index: false, follow: true },
+  };
 }
 
 export default async function TownPage({ params, searchParams }: { params: Promise<{ by: string }>; searchParams: Promise<{ lead?: string }> }) {
@@ -31,6 +41,7 @@ export default async function TownPage({ params, searchParams }: { params: Promi
   return (
     <>
       <PublicHeader />
+      <JsonLd data={[service(town), breadcrumbs([['Forside', '/'], [`Firmajulegaver i ${town}`, `/firmajulegaver/${townSlug(town)}`]])]} />
       <main className="wrap stack">
         <section className="stack-s" style={{ maxWidth: 780 }}>
           <div className="eyebrow">Firmajulegaver · {town}</div>

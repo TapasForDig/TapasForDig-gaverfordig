@@ -131,7 +131,7 @@ export function ProductImage({ json, alt, label }: { json: string; alt: string; 
   const src = images(json)[0];
   return (
     <div className="img">
-      {src ? <img src={src} alt={alt} /> : <span>Intet billede endnu</span>}
+      {src ? <img src={src} alt={alt} loading="lazy" decoding="async" /> : <span>Intet billede endnu</span>}
       {label}
     </div>
   );
