@@ -40,6 +40,8 @@ interface Item {
 
 const MAX_SIDE = 1600;
 const SIZES = 'XS, S, M, L, XL, XXL';
+const SHOE_SIZES = '36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46';
+const KIDS_SIZES = '92, 98, 104, 110, 116, 122, 128, 134, 140, 146, 152';
 
 interface Opt {
   name: string;
@@ -322,7 +324,7 @@ export default function ProductForm(props: Props) {
           <label className="check">
             <input type="checkbox" checked={useVariants} onChange={(e) => setUseVariants(e.target.checked)} />
             <span>
-              <b>Gaven findes i flere varianter</b> – fx størrelse eller farve. Medarbejderen vælger selv, og du angiver antal for hver variant.
+              <b>Gaven findes i flere varianter</b> – fx tøj- eller skostørrelse og farve. Medarbejderen vælger selv, og du angiver antal for hver variant.
             </span>
           </label>
 
@@ -344,13 +346,20 @@ export default function ProductForm(props: Props) {
                   <div className="field" style={{ flex: '1 1 260px' }}>
                     <label htmlFor={`opt-vals-${i}`}>Muligheder (adskil med komma)</label>
                     <input id={`opt-vals-${i}`} type="text" value={o.values} onChange={(e) => setOpt(i, { values: e.target.value })} placeholder={i === 0 ? SIZES : 'Fx Sort, Navy, Grå'} />
-                    <span className="hint">
-                      {o.name.toLowerCase().startsWith('st') && o.values !== SIZES && (
+                    {o.name.toLowerCase().startsWith('st') && (
+                      <span className="hint row" style={{ gap: 14 }}>
+                        Hurtigvalg:
                         <button type="button" className="linkbtn small" onClick={() => setOpt(i, { values: SIZES })}>
-                          Brug XS–XXL
+                          Tøj XS–XXL
                         </button>
-                      )}
-                    </span>
+                        <button type="button" className="linkbtn small" onClick={() => setOpt(i, { values: SHOE_SIZES })}>
+                          Sko 36–46
+                        </button>
+                        <button type="button" className="linkbtn small" onClick={() => setOpt(i, { values: KIDS_SIZES })}>
+                          Børn 92–152
+                        </button>
+                      </span>
+                    )}
                   </div>
                   {opts.length > 1 && (
                     <button type="button" className="linkbtn small" style={{ color: 'var(--bad)', alignSelf: 'center' }} onClick={() => setOpts((a) => a.filter((_, j) => j !== i))}>
